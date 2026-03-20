@@ -1,0 +1,2 @@
+# MyrosKit
+A PluralKit dashoard.
