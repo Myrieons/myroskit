@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MYROSKIT — Switch History</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: rgba(28, 29, 32, 0.65);
+    --bg-tertiary: rgba(33, 34, 38, 0.6);
+    --bg-hover: rgba(38, 39, 44, 0.75);
+    --accent: #6b6f76;
+    --accent-hover: #55585e;
+    --accent-rgb: 107, 111, 118;
+    --green: #23a559;
+    --text-primary: #f2f3f5;
+    --text-secondary: #b5bac1;
+    --text-muted: #80848e;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --radius: 12px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  /* ── Topline ── */
+  .topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .wordmark .myros { color: var(--text-primary); }
+  .wordmark .kit   { color: var(--accent); }
+
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: color 0.1s, border-color 0.1s;
+  }
+  .btn-logout:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* ── Info cards row ── */
+  .info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .info-card {
+    position: relative;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .info-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--banner-url, none);
+    background-size: cover;
+    background-position: center;
+    filter: blur(8px) brightness(0.35);
+    transform: scale(1.08);
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .info-card.has-banner::before { opacity: 1; }
+
+  .info-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-tint, transparent);
+    opacity: 0.18;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .info-card > * { position: relative; z-index: 1; }
+
+  .info-card-label {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    z-index: 1;
+  }
+
+  .info-text { min-width: 0; flex: 1; }
+
+  .info-name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .info-name {
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .info-pronouns {
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0.45;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .info-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    margin-top: 3px;
+  }
+
+  /* ── Nav tabs ── */
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .nav-tab {
+    background: rgba(49, 51, 56, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    text-decoration: none;
+    display: block;
+  }
+
+  .nav-tab.active {
+    background: #1e1f22;
+    border-color: rgba(255,255,255,0.14);
+    color: var(--text-primary);
+  }
+
+  /* ── Content box ── */
+  .content-box {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* ── Timeline ── */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .timeline-group {
+    margin-bottom: 24px;
+  }
+
+  .timeline-date-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  .switch-entry {
+    display: flex;
+    gap: 12px;
+    padding: 11px 13px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 6px;
+    transition: background 0.12s, border-color 0.12s;
+    animation: fadeUp 0.2s ease both;
+    position: relative;
+  }
+
+  .switch-entry:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: var(--border);
+  }
+
+  .switch-entry:last-child { margin-bottom: 0; }
+
+  /* Left column: time */
+  .switch-time-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 64px;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  .switch-time {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .switch-duration {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+
+  /* Divider line */
+  .switch-divider {
+    width: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin: 2px 4px;
+    border-radius: 1px;
+  }
+
+  /* Right column: members */
+  .switch-members-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .switch-member-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .switch-member-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .switch-member-pronouns {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .switch-empty {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding-top: 2px;
+  }
+
+  /* ── Current badge on most recent ── */
+  .switch-current-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--green);
+    background: rgba(35, 165, 89, 0.15);
+    border: 1px solid rgba(35, 165, 89, 0.3);
+    border-radius: 3px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+    margin-left: auto;
+    align-self: flex-start;
+  }
+
+  /* ── Avatar ── */
+  .switch-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    overflow: hidden;
+  }
+
+  .switch-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .page-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    user-select: none;
+  }
+
+  .page-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+  }
+
+  .page-btn:disabled { opacity: 0.35; cursor: default; }
+
+  .page-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .page-dots {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 0 2px;
+  }
+  /* ── Empty / error states ── */
+  .state-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .state-empty .state-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+
+  /* ── Skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
+  /* ── Log Switch panel ── */
+  .log-switch-box {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .log-switch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+    transition: background 0.12s;
+  }
+
+  .log-switch-header:hover { background: rgba(255,255,255,0.025); }
+
+  .log-switch-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+  }
+
+  .log-switch-chevron {
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .log-switch-box.open .log-switch-chevron { transform: rotate(180deg); }
+
+  .log-switch-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .log-switch-box.open .log-switch-body { display: block; }
+
+  /* Member picker */
+  .picker-search-wrap {
+    position: relative;
+    margin-top: 14px;
+    margin-bottom: 10px;
+  }
+
+  .picker-search {
+    width: 100%;
+    background: rgba(13,13,15,0.5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 10px 8px 32px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .picker-search:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+  .picker-search::placeholder { color: var(--text-muted); }
+
+  .picker-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+  }
+
+  /* Selected chips */
+  .picker-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+    min-height: 0;
+  }
+
+  .picker-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(var(--accent-rgb), 0.15);
+    border: 1px solid rgba(var(--accent-rgb), 0.35);
+    border-radius: 20px;
+    padding: 3px 10px 3px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    animation: fadeUp 0.15s ease;
+  }
+
+  .picker-chip-remove {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    transition: color 0.1s;
+    margin-left: 2px;
+  }
+
+  .picker-chip-remove:hover { color: var(--accent); }
+
+  /* Member list */
+  .picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 14px;
+  }
+
+  .picker-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.1s;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+
+  .picker-item:hover { background: var(--bg-hover); }
+
+  .picker-item.selected {
+    background: rgba(var(--accent-rgb), 0.1);
+    border-color: rgba(var(--accent-rgb), 0.2);
+  }
+
+  .picker-item-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, border-color 0.1s;
+    margin-left: auto;
+  }
+
+  .picker-item.selected .picker-item-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .picker-item-check svg { display: none; }
+  .picker-item.selected .picker-item-check svg { display: block; }
+
+  .picker-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .picker-item-pronouns {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .picker-no-fronter-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.1s;
+    border: 1px solid transparent;
+    user-select: none;
+    margin-bottom: 6px;
+  }
+
+  .picker-no-fronter-row:hover { background: var(--bg-hover); }
+  .picker-no-fronter-row.selected {
+    background: rgba(128,132,142,0.1);
+    border-color: rgba(128,132,142,0.2);
+  }
+
+  .picker-no-fronter-row .picker-item-name {
+    color: var(--text-muted);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .picker-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 14px 0;
+    font-style: italic;
+  }
+
+  /* Log button row */
+  .log-switch-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-log-switch {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn-log-switch:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-log-switch:active:not(:disabled) { transform: scale(0.98); }
+  .btn-log-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .log-switch-status {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .log-switch-status.visible { opacity: 1; }
+  .log-switch-status.error { color: #ed4245; }
+
+  @media (max-width: 620px) {
+    .info-row { grid-template-columns: 1fr; }
+    .nav-tabs { flex-wrap: wrap; }
+    .nav-tab { flex: none; font-size: 12px; padding: 7px 12px; }
+    .switch-time-col { min-width: 52px; }
+  }
+  /* ── Multi-fronter carousel ── */
+  .fronter-nav {
+    position: absolute; bottom: 7px; z-index: 2;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .fronter-nav.prev { left: 8px; }
+  .fronter-nav.next { right: 8px; }
+  .fronter-arrow {
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
+    color: var(--text-secondary); cursor: pointer;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s, color 0.1s; font-size: 13px; flex-shrink: 0; padding: 0;
+  }
+  .fronter-arrow:hover { background: rgba(0,0,0,0.6); color: var(--text-primary); }
+  .fronter-pip-wrap { display: flex; gap: 3px; align-items: center; }
+  .fronter-pip {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); transition: background 0.15s;
+  }
+  .fronter-pip.active { background: rgba(255,255,255,0.8); }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Logo + logout -->
+  <div class="topline">
+    <div class="wordmark"><span class="myros">MYROS</span><span class="kit">KIT</span></div>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
+
+  <!-- System + Fronter cards -->
+  <div class="info-row">
+    <div class="info-card" id="system-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skeleton" style="height:15px;width:120px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:11px;width:80px"></div>
+      </div>
+    </div>
+    <div class="info-card" id="fronter-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skeleton" style="height:10px;width:60px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:15px;width:100px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:11px;width:70px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="nav-tabs">
+    <a class="nav-tab" href="dashboard.html">Members</a>
+    <a class="nav-tab" href="system.html">System</a>
+    <a class="nav-tab active" href="switches.html">Switch History</a>
+    <a class="nav-tab" href="groups.html">Group List</a>
+    <a class="nav-tab" href="analytics.html">Analytics</a>
+    <a class="nav-tab" href="settings.html">Settings</a>
+  </div>
+
+  <!-- Log Switch panel -->
+  <div class="log-switch-box" id="log-switch-box">
+    <div class="log-switch-header" onclick="toggleLogPanel()">
+      <div class="log-switch-title">Log a Switch</div>
+      <span class="log-switch-chevron">▾</span>
+    </div>
+    <div class="log-switch-body">
+      <!-- No fronter option -->
+      <div class="picker-no-fronter-row" id="no-fronter-row" onclick="toggleNoFronter()">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--bg-tertiary);border:1px dashed var(--border);flex-shrink:0"></div>
+        <div class="picker-item-name">No fronter</div>
+        <div class="picker-item-check" id="no-fronter-check">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+      <!-- Selected chips -->
+      <div class="picker-selected" id="picker-selected"></div>
+
+      <!-- Search -->
+      <div class="picker-search-wrap">
+        <span class="picker-search-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="search" class="picker-search" id="picker-search" placeholder="Search members…" oninput="filterPicker(this.value)" autocomplete="off" />
+      </div>
+
+      <!-- Member list -->
+      <div class="picker-list" id="picker-list"></div>
+
+      <!-- Actions -->
+      <div class="log-switch-actions">
+        <button class="btn-log-switch" id="log-switch-btn" onclick="logSwitch()" disabled>Log Switch</button>
+        <span class="log-switch-status" id="log-switch-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content box -->
+  <div class="content-box">
+    <div class="section-header">
+      <div class="section-title">Switch History</div>
+      <div id="switch-count" style="font-size:11px;color:var(--text-muted)"></div>
+    </div>
+
+    <div class="timeline" id="timeline">
+      <!-- skeletons -->
+      <div class="timeline-group">
+        <div class="skeleton" style="height:10px;width:80px;margin-bottom:12px"></div>
+        <div class="switch-entry" style="animation:none"><div class="skeleton" style="height:12px;width:48px"></div><div style="width:1px;background:var(--border);margin:0 8px"></div><div style="flex:1"><div class="skeleton" style="height:26px;width:160px;border-radius:50px"></div></div></div>
+        <div class="switch-entry" style="animation:none;margin-top:6px"><div class="skeleton" style="height:12px;width:48px"></div><div style="width:1px;background:var(--border);margin:0 8px"></div><div style="flex:1"><div class="skeleton" style="height:26px;width:120px;border-radius:50px"></div></div></div>
+        <div class="switch-entry" style="animation:none;margin-top:6px"><div class="skeleton" style="height:12px;width:48px"></div><div style="width:1px;background:var(--border);margin:0 8px"></div><div style="flex:1"><div class="skeleton" style="height:26px;width:140px;border-radius:50px"></div></div></div>
+      </div>
+      <div class="timeline-group">
+        <div class="skeleton" style="height:10px;width:80px;margin-bottom:12px"></div>
+        <div class="switch-entry" style="animation:none"><div class="skeleton" style="height:12px;width:48px"></div><div style="width:1px;background:var(--border);margin:0 8px"></div><div style="flex:1"><div class="skeleton" style="height:26px;width:150px;border-radius:50px"></div></div></div>
+        <div class="switch-entry" style="animation:none;margin-top:6px"><div class="skeleton" style="height:12px;width:48px"></div><div style="width:1px;background:var(--border);margin:0 8px"></div><div style="flex:1"><div class="skeleton" style="height:26px;width:130px;border-radius:50px"></div></div></div>
+      </div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<script>
+const API   = 'https://api.pluralkit.me/v2';
+// ── Apply saved accent color ───────────────────────────────
+const token = sessionStorage.getItem('pk_token');
+if (!token) window.location.href = 'index.html';
+
+const COLORS = ['#e8457a','#eb459e','#57f287','#fee75c','#ed4245','#1b9adf','#f47fff','#ff944d'];
+function randColor(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xffffffff;
+  return COLORS[Math.abs(h) % COLORS.length];
+}
+function initial(name) { return name ? name.charAt(0).toUpperCase() : '?'; }
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Cache helpers ────────────────────────────────────────
+function _saveCache(data) {
+  try { sessionStorage.setItem('pk_cache', JSON.stringify(data)); } catch {}
+}
+function _loadCache() {
+  try {
+    const raw = sessionStorage.getItem('pk_cache');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+// ── Member lookup map (id → member object) ───────────────
+let memberMap = {};
+
+// ── Switch data ──────────────────────────────────────────
+let switches = [];       // all loaded switches, newest first
+let beforeCursor = null; // for pagination (timestamp of oldest loaded)
+let allLoaded = false;
+const PAGE_SIZE = 50;
+
+// ── Time helpers ─────────────────────────────────────────
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  if (isSameDay(d, today)) return 'Today';
+  if (isSameDay(d, yesterday)) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: d.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth()    === b.getMonth()    &&
+         a.getDate()     === b.getDate();
+}
+
+function fmtDuration(ms) {
+  if (ms < 0) return '';
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 1)   return '< 1 min';
+  if (totalMin < 60)  return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h < 24) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  const d = Math.floor(h / 24);
+  const rh = h % 24;
+  return rh > 0 ? `${d}d ${rh}h` : `${d}d`;
+}
+
+// ── Avatar ───────────────────────────────────────────────
+function makeAvatar(url, name, id, size = 26) {
+  const el = document.createElement('div');
+  el.className = 'switch-avatar';
+  el.style.cssText = `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.38)}px;background:${randColor(id || name || '?')}`;
+  if (url) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.onerror = () => { img.remove(); el.textContent = initial(name); };
+    el.appendChild(img);
+  } else {
+    el.textContent = initial(name);
+  }
+  return el;
+}
+
+// ── Render cards (shared with other pages) ───────────────
+function applyCardBanner(el, bannerUrl, color) {
+  if (bannerUrl) {
+    el.style.setProperty('--banner-url', `url('${bannerUrl}')`);
+    el.classList.add('has-banner');
+  }
+  if (color) el.style.setProperty('--color-tint', `#${color}`);
+}
+
+function makeInfoAvatar(url, name, size = 56) {
+  const el = document.createElement('div');
+  el.style.cssText = `width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:${randColor(name || '?')}`;
+  if (url) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    img.onerror = () => { img.remove(); el.textContent = initial(name); };
+    el.appendChild(img);
+  } else {
+    el.textContent = initial(name);
+  }
+  return el;
+}
+
+function renderSystemCard(sys) {
+  const card = document.getElementById('system-card');
+  card.innerHTML = '<div class="info-card-label">System</div>';
+  applyCardBanner(card, sys.banner, sys.color);
+  card.appendChild(makeInfoAvatar(sys.avatar_url, sys.name, 56));
+  const text = document.createElement('div');
+  text.className = 'info-text';
+  text.innerHTML = `
+    <div class="info-name-row">
+      <div class="info-name">${esc(sys.name || 'Unnamed System')}</div>
+      ${sys.pronouns ? `<div class="info-pronouns">${esc(sys.pronouns)}</div>` : ''}
+    </div>
+    <div class="info-id">${esc(sys.id || '')}</div>
+  `;
+  card.appendChild(text);
+}
+
+
+// ── Render timeline ──────────────────────────────────────
+const PER_PAGE = 7;
+let currentPage = 1;
+
+function renderPage(page) {
+  currentPage = page;
+  const total = switches.length;
+  const totalKnownPages = Math.ceil(total / PER_PAGE);
+  // If we're on the last known page and haven't loaded everything yet, fetch more first
+  if (page === totalKnownPages && !allLoaded) {
+    fetchMoreThenRender(page);
+    return;
+  }
+  const start = (page - 1) * PER_PAGE;
+  const slice = switches.slice(start, start + PER_PAGE);
+  renderTimeline(slice, start);
+  renderPagination(page);
+}
+
+async function fetchMoreThenRender(page) {
+  // Show a brief loading state on the pagination
+  document.getElementById('pagination').innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Loading…</span>';
+  try {
+    const batch = await fetchSwitches(beforeCursor);
+    if (batch.length < PAGE_SIZE) allLoaded = true;
+    switches.push(...batch);
+    beforeCursor = batch.length ? batch[batch.length - 1].timestamp : beforeCursor;
+  } catch {}
+  renderPage(page);
+}
+
+function renderTimeline(slice, startIdx) {
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = '';
+
+  if (!slice.length) {
+    timeline.innerHTML = `
+      <div class="state-empty">
+        <div class="state-icon">🔄</div>
+        No switch history found.
+      </div>`;
+    return;
+  }
+
+  // Group by date
+  const groups = [];
+  let currentDateStr = null;
+
+  slice.forEach((sw, i) => {
+    const globalIdx = startIdx + i;
+    const dateStr = fmtDate(sw.timestamp);
+
+    if (dateStr !== currentDateStr) {
+      groups.push({ dateStr, entries: [] });
+      currentDateStr = dateStr;
+    }
+
+    const nextSw = switches[globalIdx + 1] || null;
+    const duration = nextSw ? new Date(sw.timestamp) - new Date(nextSw.timestamp) : null;
+    groups[groups.length - 1].entries.push({ sw, duration, isFirst: globalIdx === 0 });
+  });
+
+  groups.forEach(g => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'timeline-group';
+
+    const label = document.createElement('div');
+    label.className = 'timeline-date-label';
+    label.textContent = g.dateStr;
+    groupEl.appendChild(label);
+
+    g.entries.forEach(entry => groupEl.appendChild(buildEntryEl(entry)));
+    timeline.appendChild(groupEl);
+  });
+
+  // Update count label
+  const countEl = document.getElementById('switch-count');
+  const total = switches.length;
+  countEl.textContent = allLoaded
+    ? `${total} switch${total !== 1 ? 'es' : ''}`
+    : `${total}+ switches`;
+}
+
+function renderPagination(page) {
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = '';
+
+  const total = switches.length;
+  // Total pages: known pages + 1 extra if more exist on server
+  const knownPages = Math.ceil(total / PER_PAGE);
+  const totalPages = allLoaded ? knownPages : knownPages + (total % PER_PAGE === 0 ? 1 : 0);
+
+  if (totalPages <= 1 && allLoaded) return;
+
+  const prev = document.createElement('button');
+  prev.className = 'page-btn';
+  prev.textContent = '← Prev';
+  prev.disabled = page === 1;
+  prev.onclick = () => renderPage(page - 1);
+  pag.appendChild(prev);
+
+  // Page numbers: show up to 5 around current
+  const range = buildPageRange(page, totalPages);
+  range.forEach(p => {
+    if (p === '…') {
+      const dots = document.createElement('span');
+      dots.className = 'page-dots';
+      dots.textContent = '…';
+      pag.appendChild(dots);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'page-btn' + (p === page ? ' active' : '');
+      btn.textContent = p;
+      btn.onclick = () => renderPage(p);
+      // If this page number is beyond loaded data, show a loading hint
+      if (!allLoaded && p === totalPages) btn.title = 'Load more';
+      pag.appendChild(btn);
+    }
+  });
+
+  const next = document.createElement('button');
+  next.className = 'page-btn';
+  next.textContent = 'Next →';
+  next.disabled = allLoaded && page === knownPages;
+  next.onclick = () => renderPage(page + 1);
+  pag.appendChild(next);
+}
+
+function buildPageRange(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = [1];
+  if (current > 3) pages.push('…');
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) pages.push(p);
+  if (current < total - 2) pages.push('…');
+  pages.push(total);
+  return pages;
+}
+
+function buildEntryEl({ sw, duration, isFirst }) {
+  const entry = document.createElement('div');
+  entry.className = 'switch-entry';
+
+  // Time col
+  const timeCol = document.createElement('div');
+  timeCol.className = 'switch-time-col';
+
+  const timeEl = document.createElement('div');
+  timeEl.className = 'switch-time';
+  timeEl.textContent = fmtTime(sw.timestamp);
+  timeCol.appendChild(timeEl);
+
+  if (duration !== null) {
+    const durEl = document.createElement('div');
+    durEl.className = 'switch-duration';
+    durEl.textContent = fmtDuration(duration);
+    timeCol.appendChild(durEl);
+  }
+
+  // Divider
+  const divider = document.createElement('div');
+  divider.className = 'switch-divider';
+
+  // Members col
+  const membersCol = document.createElement('div');
+  membersCol.className = 'switch-members-col';
+
+  const memberIds = sw.members || [];
+
+  if (memberIds.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.className = 'switch-empty';
+    emptyEl.textContent = 'No fronter registered';
+    membersCol.appendChild(emptyEl);
+  } else {
+    memberIds.forEach(idOrObj => {
+      const id = typeof idOrObj === 'string' ? idOrObj : idOrObj.id;
+      const m = memberMap[id];
+      const row = document.createElement('div');
+      row.className = 'switch-member-row';
+
+      const name   = m ? (m.display_name || m.name) : id;
+      const avUrl  = m?.avatar_url || null;
+      const color  = m?.color || null;
+      const pronouns = m?.pronouns || null;
+
+      const av = makeAvatar(avUrl, name, id, 26);
+      if (color) av.style.background = `#${color}`;
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'switch-member-name';
+      nameEl.textContent = name;
+      if (color) nameEl.style.color = `#${color}`;
+
+      row.appendChild(av);
+      row.appendChild(nameEl);
+
+      if (pronouns) {
+        const pEl = document.createElement('div');
+        pEl.className = 'switch-member-pronouns';
+        pEl.textContent = pronouns;
+        row.appendChild(pEl);
+      }
+
+      membersCol.appendChild(row);
+    });
+  }
+
+  if (isFirst) {
+    const badge = document.createElement('div');
+    badge.className = 'switch-current-badge';
+    badge.textContent = 'Current';
+    membersCol.appendChild(badge);
+  }
+
+  entry.appendChild(timeCol);
+  entry.appendChild(divider);
+  entry.appendChild(membersCol);
+
+  return entry;
+}
+
+// ── API fetch ─────────────────────────────────────────────
+async function apiFetch(path) {
+  const r = await fetch(API + path, { headers: { Authorization: token } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function fetchSwitches(before = null) {
+  let url = `/systems/@me/switches?limit=${PAGE_SIZE}`;
+  if (before) url += `&before=${encodeURIComponent(before)}`;
+  return apiFetch(url);
+}
+
+// ── Boot ──────────────────────────────────────────────────
+function renderFronterCard(fronters) {
+  const list = Array.isArray(fronters) ? fronters : (fronters ? [fronters] : []);
+  const card = document.getElementById('fronter-card');
+  let idx = 0;
+
+  function draw() {
+    card.innerHTML = '<div class="info-card-label">Currently Fronting</div>';
+    card.style.removeProperty('--banner-url');
+    card.style.removeProperty('--color-tint');
+    card.classList.remove('has-banner');
+
+    if (!list.length) {
+      const emptyAv = document.createElement('div');
+      emptyAv.style.cssText = 'width:56px;height:56px;border-radius:50%;background:var(--bg-tertiary);border:1px dashed var(--border);flex-shrink:0';
+      card.appendChild(emptyAv);
+      const emptyText = document.createElement('div');
+      emptyText.className = 'info-text';
+      emptyText.innerHTML = '<div class="info-name" style="color:var(--text-muted);font-style:italic;font-weight:400">No fronter registered</div>';
+      card.appendChild(emptyText);
+      return;
+    }
+
+    const fronter = list[idx];
+    applyCardBanner(card, fronter.banner, fronter.color);
+    const av = makeAvatar(fronter.avatar_url, fronter.display_name || fronter.name, 56);
+    if (fronter.color) av.style.background = '#' + fronter.color;
+    card.appendChild(av);
+
+    const text = document.createElement('div');
+    text.className = 'info-text';
+    text.innerHTML = `
+      <div class="info-name-row">
+        <div class="info-name">${esc(fronter.display_name || fronter.name)}</div>
+        ${fronter.pronouns ? '<div class="info-pronouns">' + esc(fronter.pronouns) + '</div>' : ''}
+      </div>
+      <div class="info-id">${esc(fronter.id || '')}</div>
+    `;
+    card.appendChild(text);
+
+    if (list.length > 1) {
+      const prevNav = document.createElement('div');
+      prevNav.className = 'fronter-nav prev';
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'fronter-arrow';
+      prevBtn.innerHTML = '&#8249;';
+      prevBtn.title = 'Previous fronter';
+      prevBtn.onclick = e => { e.stopPropagation(); idx = (idx - 1 + list.length) % list.length; draw(); };
+      prevNav.appendChild(prevBtn);
+      card.appendChild(prevNav);
+
+      const nextNav = document.createElement('div');
+      nextNav.className = 'fronter-nav next';
+      const pipWrap = document.createElement('div');
+      pipWrap.className = 'fronter-pip-wrap';
+      list.forEach((_, i) => {
+        const pip = document.createElement('div');
+        pip.className = 'fronter-pip' + (i === idx ? ' active' : '');
+        pipWrap.appendChild(pip);
+      });
+      nextNav.appendChild(pipWrap);
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'fronter-arrow';
+      nextBtn.innerHTML = '&#8250;';
+      nextBtn.title = 'Next fronter';
+      nextBtn.onclick = e => { e.stopPropagation(); idx = (idx + 1) % list.length; draw(); };
+      nextNav.appendChild(nextBtn);
+      card.appendChild(nextNav);
+    }
+  }
+
+  draw();
+}
+
+async function boot() {
+  // Render top cards from cache immediately
+  const cached = _loadCache();
+  if (cached) {
+    if (cached.system)  renderSystemCard(cached.system);
+    if (cached.fronter !== undefined) renderFronterCard(cached.fronter);
+    if (cached.members) {
+      cached.members.forEach(m => { memberMap[m.id] = m; });
+      buildPickerList();
+    }
+  }
+
+  try {
+    // Always fetch fresh system/fronter
+    const [system, membersRaw, swBatch] = await Promise.all([
+      apiFetch('/systems/@me'),
+      apiFetch('/systems/@me/members'),
+      fetchSwitches(),
+    ]);
+
+    // Build member map
+    memberMap = {};
+    membersRaw.forEach(m => { memberMap[m.id] = m; });
+    buildPickerList();
+
+    // Resolve fronter
+    let fronter = null;
+    if (swBatch.length && swBatch[0].members?.length) {
+      const fronterIds = swBatch[0].members.map(x => typeof x === 'string' ? x : x.id);
+      const fronterList = fronterIds.map(id => memberMap[id]).filter(Boolean);
+      fronter = fronterList.length > 0 ? fronterList : null;
+    }
+
+    // Update cache
+    const prev = _loadCache();
+    _saveCache({ system, members: membersRaw, fronter: fronter || prev?.fronter || null });
+
+    renderSystemCard(system);
+    renderFronterCard(fronter);
+
+    // Render switches
+    if (swBatch.length < PAGE_SIZE) allLoaded = true;
+    switches = swBatch;
+    beforeCursor = swBatch.length ? swBatch[swBatch.length - 1].timestamp : null;
+    currentPage = 1;
+    renderPage(1);
+
+  } catch (e) {
+    console.error('Boot error:', e);
+    if (e.message?.includes('401') || e.message?.includes('403')) {
+      sessionStorage.removeItem('pk_token');
+      window.location.href = 'index.html';
+    }
+    document.getElementById('timeline').innerHTML = `
+      <div class="state-empty">
+        <div class="state-icon">⚠️</div>
+        Failed to load switch history.
+      </div>`;
+  }
+}
+
+// ── Log Switch panel ─────────────────────────────────────
+let selectedIds = new Set();  // member IDs selected for new switch
+let noFronterSelected = false;
+let pickerQuery = '';
+
+function toggleLogPanel() {
+  document.getElementById('log-switch-box').classList.toggle('open');
+}
+
+function toggleNoFronter() {
+  noFronterSelected = !noFronterSelected;
+  if (noFronterSelected) {
+    // Deselect all members
+    selectedIds.clear();
+    renderChips();
+    filterPicker(pickerQuery);
+  }
+  document.getElementById('no-fronter-row').classList.toggle('selected', noFronterSelected);
+  document.getElementById('no-fronter-check').querySelector('svg').style.display = noFronterSelected ? 'block' : 'none';
+  updateLogBtn();
+}
+
+function togglePickerMember(id) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+  } else {
+    selectedIds.add(id);
+    // Deselect "no fronter" if picking a member
+    if (noFronterSelected) {
+      noFronterSelected = false;
+      document.getElementById('no-fronter-row').classList.remove('selected');
+    }
+  }
+  renderChips();
+  filterPicker(pickerQuery);
+  updateLogBtn();
+}
+
+function renderChips() {
+  const wrap = document.getElementById('picker-selected');
+  wrap.innerHTML = '';
+  selectedIds.forEach(id => {
+    const m = memberMap[id];
+    if (!m) return;
+    const name = m.display_name || m.name;
+    const chip = document.createElement('div');
+    chip.className = 'picker-chip';
+
+    const av = makeAvatar(m.avatar_url, name, id, 18);
+    if (m.color) av.style.background = `#${m.color}`;
+
+    const label = document.createElement('span');
+    label.textContent = name;
+    if (m.color) label.style.color = `#${m.color}`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'picker-chip-remove';
+    removeBtn.innerHTML = '×';
+    removeBtn.title = `Remove ${name}`;
+    removeBtn.onclick = (e) => { e.stopPropagation(); togglePickerMember(id); };
+
+    chip.appendChild(av);
+    chip.appendChild(label);
+    chip.appendChild(removeBtn);
+    wrap.appendChild(chip);
+  });
+}
+
+function buildPickerList() {
+  const allMembersSorted = Object.values(memberMap).sort((a, b) => {
+    const nameA = (a.display_name || a.name || '').toLowerCase();
+    const nameB = (b.display_name || b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+  renderPickerList(allMembersSorted);
+}
+
+function filterPicker(query) {
+  pickerQuery = query.trim().toLowerCase();
+  const members = Object.values(memberMap).sort((a, b) => {
+    const nameA = (a.display_name || a.name || '').toLowerCase();
+    const nameB = (b.display_name || b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+  const filtered = pickerQuery
+    ? members.filter(m => {
+        const n = (m.display_name || m.name || '').toLowerCase();
+        const p = (m.pronouns || '').toLowerCase();
+        return n.includes(pickerQuery) || p.includes(pickerQuery);
+      })
+    : members;
+  renderPickerList(filtered);
+}
+
+function renderPickerList(members) {
+  const list = document.getElementById('picker-list');
+  list.innerHTML = '';
+
+  if (!members.length) {
+    const empty = document.createElement('div');
+    empty.className = 'picker-empty';
+    empty.textContent = 'No members found.';
+    list.appendChild(empty);
+    return;
+  }
+
+  members.forEach(m => {
+    const id = m.id;
+    const name = m.display_name || m.name;
+    const isSelected = selectedIds.has(id);
+
+    const item = document.createElement('div');
+    item.className = 'picker-item' + (isSelected ? ' selected' : '');
+    item.onclick = () => togglePickerMember(id);
+
+    const av = makeAvatar(m.avatar_url, name, id, 26);
+    if (m.color) av.style.background = `#${m.color}`;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'picker-item-name';
+    nameEl.textContent = name;
+    if (m.color) nameEl.style.color = `#${m.color}`;
+
+    const check = document.createElement('div');
+    check.className = 'picker-item-check';
+    check.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    item.appendChild(av);
+    item.appendChild(nameEl);
+    if (m.pronouns) {
+      const pEl = document.createElement('div');
+      pEl.className = 'picker-item-pronouns';
+      pEl.textContent = m.pronouns;
+      item.appendChild(pEl);
+    }
+    item.appendChild(check);
+    list.appendChild(item);
+  });
+}
+
+function updateLogBtn() {
+  const btn = document.getElementById('log-switch-btn');
+  btn.disabled = selectedIds.size === 0 && !noFronterSelected;
+}
+
+async function logSwitch() {
+  const btn = document.getElementById('log-switch-btn');
+  const status = document.getElementById('log-switch-status');
+  btn.disabled = true;
+  btn.textContent = 'Logging…';
+  status.classList.remove('visible', 'error');
+
+  const members = noFronterSelected ? [] : [...selectedIds];
+
+  try {
+    const r = await fetch(`${API}/systems/@me/switches`, {
+      method: 'POST',
+      headers: { Authorization: token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ members })
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    // Reset picker
+    selectedIds.clear();
+    noFronterSelected = false;
+    document.getElementById('no-fronter-row').classList.remove('selected');
+    document.getElementById('picker-search').value = '';
+    pickerQuery = '';
+    renderChips();
+    renderPickerList(Object.values(memberMap).sort((a, b) =>
+      (a.display_name || a.name || '').localeCompare(b.display_name || b.name || '')
+    ));
+
+    // Show status
+    status.textContent = '✓ Switch logged';
+    status.classList.add('visible');
+    setTimeout(() => status.classList.remove('visible'), 2500);
+
+    // Refresh the timeline and fronter card
+    await refreshAfterSwitch(members);
+
+  } catch (e) {
+    status.textContent = 'Failed — please retry';
+    status.classList.add('visible', 'error');
+    setTimeout(() => status.classList.remove('visible', 'error'), 3000);
+  }
+
+  btn.textContent = 'Log Switch';
+  btn.disabled = (selectedIds.size === 0 && !noFronterSelected);
+}
+
+async function refreshAfterSwitch(memberIds) {
+  try {
+    const fresh = await fetchSwitches();
+    if (fresh.length < PAGE_SIZE) allLoaded = true;
+    switches = fresh;
+    beforeCursor = fresh.length ? fresh[fresh.length - 1].timestamp : null;
+    currentPage = 1;
+    renderPage(1);
+
+    // Update fronter card
+    const fronter = memberIds.length ? memberIds.map(id => memberMap[id]).filter(Boolean) : null;
+    renderFronterCard(fronter);
+
+    // Sync cache
+    const prev = _loadCache();
+    if (prev) { prev.fronter = fronter; _saveCache(prev); }
+  } catch {}
+}
+
+
+function logout() {
+  sessionStorage.removeItem('pk_token');
+  window.location.href = 'index.html';
+}
+
+boot();
+</script>
+</body>
+</html>

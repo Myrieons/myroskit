@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MYROSKIT — Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: rgba(28, 29, 32, 0.65);
+    --bg-tertiary: rgba(33, 34, 38, 0.6);
+    --bg-hover: rgba(38, 39, 44, 0.75);
+    --accent: #6b6f76;
+    --accent-hover: #55585e;
+    --accent-rgb: 107, 111, 118;
+    --green: #23a559;
+    --text-primary: #f2f3f5;
+    --text-secondary: #b5bac1;
+    --text-muted: #80848e;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --radius: 12px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+
+  /* ── Topline ── */
+  .topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .wordmark .myros { color: var(--text-primary); }
+  .wordmark .kit   { color: var(--accent); }
+  .btn-logout {
+    background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-muted); font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; cursor: pointer; transition: color 0.1s, border-color 0.1s;
+  }
+  .btn-logout:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* ── Info cards ── */
+  .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .info-card {
+    position: relative; background: var(--bg-secondary); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; display: flex; align-items: center;
+    gap: 14px; min-width: 0; overflow: hidden; isolation: isolate;
+  }
+  .info-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: var(--banner-url, none); background-size: cover;
+    background-position: center; filter: blur(8px) brightness(0.35);
+    transform: scale(1.08); z-index: 0; opacity: 0; transition: opacity 0.3s ease;
+  }
+  .info-card.has-banner::before { opacity: 1; }
+  .info-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: var(--color-tint, transparent); opacity: 0.18; z-index: 0; pointer-events: none;
+  }
+  .info-card > * { position: relative; z-index: 1; }
+  .info-card-label {
+    position: absolute; top: 10px; right: 12px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); opacity: 0.6; z-index: 1;
+  }
+  .info-text { min-width: 0; flex: 1; }
+  .info-name-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .info-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .info-pronouns { font-size: 12px; color: var(--text-secondary); opacity: 0.45; white-space: nowrap; flex-shrink: 0; }
+  .info-id { font-size: 11px; color: var(--text-muted); font-family: 'Courier New', monospace; margin-top: 3px; }
+
+  /* ── Nav tabs ── */
+  .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .nav-tab {
+    background: rgba(49, 51, 56, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary);
+    font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer;
+    user-select: none; transition: background 0.1s, color 0.1s, border-color 0.1s;
+    flex: 1; text-align: center; white-space: nowrap; text-decoration: none; display: block;
+  }
+  .nav-tab.active {
+    background: #1e1f22;
+    border-color: rgba(255,255,255,0.14);
+    color: var(--text-primary);
+  }
+
+  /* ── Loading state ── */
+  .loading-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 20px; gap: 16px;
+  }
+  .loading-spinner {
+    width: 32px; height: 32px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-label { font-size: 13px; color: var(--text-muted); }
+  .loading-progress { font-size: 11px; color: var(--text-muted); opacity: 0.7; }
+
+  /* ── Analytics grid ── */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ── Stat card ── */
+  .stat-card {
+    background: var(--bg-secondary); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px;
+    animation: fadeUp 0.3s ease both;
+  }
+  .stat-card.full-width { grid-column: 1 / -1; }
+
+  .stat-card-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 16px;
+  }
+
+  /* ── Switch count grid ── */
+  .switch-counts {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .switch-count-item { text-align: center; }
+  .switch-count-value {
+    font-size: 28px; font-weight: 800; color: var(--text-primary);
+    line-height: 1; margin-bottom: 4px;
+  }
+  .switch-count-value.accent { color: var(--accent); }
+  .switch-count-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+
+  /* ── Period tabs ── */
+  .period-tabs {
+    display: flex; gap: 4px; margin-bottom: 14px;
+    background: rgba(0,0,0,0.2); border-radius: var(--radius-sm);
+    padding: 3px;
+  }
+  .period-tab {
+    flex: 1; text-align: center; font-size: 11px; font-weight: 600;
+    padding: 5px 8px; border-radius: 4px; cursor: pointer;
+    color: var(--text-muted); transition: background 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .period-tab.active { background: var(--bg-secondary); color: var(--text-primary); }
+
+  /* ── Leaderboard rows ── */
+  .leaderboard { display: flex; flex-direction: column; gap: 8px; }
+
+  .lb-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+    transition: background 0.1s;
+  }
+  .lb-row:hover { background: rgba(255,255,255,0.04); }
+
+  .lb-rank {
+    font-size: 13px; font-weight: 800; color: var(--text-muted);
+    min-width: 18px; text-align: center; flex-shrink: 0;
+  }
+  .lb-rank.gold   { color: #fee75c; }
+  .lb-rank.silver { color: #b0bec5; }
+  .lb-rank.bronze { color: #ff944d; }
+
+  .lb-avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; overflow: hidden;
+  }
+  .lb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-name {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lb-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+  /* Bar */
+  .lb-bar-wrap { flex: 0 0 100px; }
+  .lb-bar-bg {
+    height: 4px; background: rgba(255,255,255,0.06);
+    border-radius: 99px; overflow: hidden;
+  }
+  .lb-bar-fill {
+    height: 100%; border-radius: 99px;
+    background: var(--accent); transition: width 0.6s ease;
+  }
+  .lb-val {
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    white-space: nowrap; text-align: right; min-width: 58px; flex-shrink: 0;
+  }
+
+  /* ── Co-front pairs ── */
+  .cofronts { display: flex; flex-direction: column; gap: 8px; }
+
+  .cofront-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+  }
+  .cofront-avatars { display: flex; margin-right: 2px; flex-shrink: 0; }
+  .cofront-avatars .lb-avatar { border: 2px solid var(--bg-tertiary); }
+  .cofront-avatars .lb-avatar:not(:first-child) { margin-left: -8px; }
+  .cofront-info { flex: 1; min-width: 0; }
+  .cofront-names {
+    font-size: 12px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cofront-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .cofront-count {
+    font-size: 13px; font-weight: 700; color: var(--text-secondary);
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* ── Empty state ── */
+  .stat-empty {
+    text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px; font-style: italic;
+  }
+
+  /* ── Error ── */
+  .error-banner {
+    background: rgba(237,66,69,0.12); border: 1px solid rgba(237,66,69,0.3);
+    border-radius: var(--radius-sm); color: #f38ba8; font-size: 13px;
+    padding: 12px 16px; text-align: center;
+  }
+
+  /* ── Skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
+  @media (max-width: 680px) {
+    .info-row { grid-template-columns: 1fr; }
+    .nav-tabs { flex-wrap: wrap; }
+    .nav-tab { flex: none; font-size: 12px; padding: 7px 12px; }
+    .analytics-grid { grid-template-columns: 1fr; }
+    .switch-counts { grid-template-columns: repeat(2, 1fr); }
+    .lb-bar-wrap { display: none; }
+  }
+  /* ── Multi-fronter carousel ── */
+  .fronter-nav {
+    position: absolute; bottom: 7px; z-index: 2;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .fronter-nav.prev { left: 8px; }
+  .fronter-nav.next { right: 8px; }
+  .fronter-arrow {
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
+    color: var(--text-secondary); cursor: pointer;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s, color 0.1s; font-size: 13px; flex-shrink: 0; padding: 0;
+  }
+  .fronter-arrow:hover { background: rgba(0,0,0,0.6); color: var(--text-primary); }
+  .fronter-pip-wrap { display: flex; gap: 3px; align-items: center; }
+  .fronter-pip {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); transition: background 0.15s;
+  }
+  .fronter-pip.active { background: rgba(255,255,255,0.8); }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Logo + logout -->
+  <div class="topline">
+    <div class="wordmark"><span class="myros">MYROS</span><span class="kit">KIT</span></div>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
+
+  <!-- System + Fronter cards -->
+  <div class="info-row">
+    <div class="info-card" id="system-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skeleton" style="height:15px;width:120px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:11px;width:80px"></div>
+      </div>
+    </div>
+    <div class="info-card" id="fronter-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skeleton" style="height:10px;width:60px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:15px;width:100px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:11px;width:70px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="nav-tabs">
+    <a class="nav-tab" href="dashboard.html">Members</a>
+    <a class="nav-tab" href="system.html">System</a>
+    <a class="nav-tab" href="switches.html">Switch History</a>
+    <a class="nav-tab" href="groups.html">Group List</a>
+    <a class="nav-tab active" href="analytics.html">Analytics</a>
+    <a class="nav-tab" href="settings.html">Settings</a>
+  </div>
+
+  <!-- Analytics content -->
+  <div id="analytics-root"></div>
+
+</div>
+
+<script>
+const API   = 'https://api.pluralkit.me/v2';
+// ── Apply saved accent color ───────────────────────────────
+const token = sessionStorage.getItem('pk_token');
+if (!token) window.location.href = 'index.html';
+
+const COLORS = ['#e8457a','#eb459e','#57f287','#fee75c','#ed4245','#1b9adf','#f47fff','#ff944d'];
+function randColor(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xffffffff;
+  return COLORS[Math.abs(h) % COLORS.length];
+}
+function initial(s) { return s ? s.charAt(0).toUpperCase() : '?'; }
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Cache ─────────────────────────────────────────────────
+function _saveCache(d) { try { sessionStorage.setItem('pk_cache', JSON.stringify(d)); } catch {} }
+function _loadCache() { try { const r = sessionStorage.getItem('pk_cache'); return r ? JSON.parse(r) : null; } catch { return null; } }
+
+// ── Time helpers ──────────────────────────────────────────
+function startOfDay(d)   { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function startOfWeek(d)  { const day = d.getDay(); return startOfDay(new Date(d - day * 86400000)); }
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+
+function fmtDuration(ms) {
+  if (ms < 0) ms = 0;
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 1)  return '< 1m';
+  if (totalMin < 60) return `${totalMin}m`;
+  const h = Math.floor(totalMin / 60), m = totalMin % 60;
+  if (h < 24) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  const dv = Math.floor(h / 24), rh = h % 24;
+  return rh > 0 ? `${dv}d ${rh}h` : `${dv}d`;
+}
+
+// ── API ───────────────────────────────────────────────────
+async function apiFetch(path) {
+  const r = await fetch(API + path, { headers: { Authorization: token } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+// Fetch ALL switches with pagination, reporting progress
+async function fetchAllSwitches(onProgress) {
+  const all = [];
+  let before = null;
+  const LIMIT = 100;
+  while (true) {
+    let url = `/systems/@me/switches?limit=${LIMIT}`;
+    if (before) url += `&before=${encodeURIComponent(before)}`;
+    const batch = await apiFetch(url);
+    if (!batch.length) break;
+    all.push(...batch);
+    onProgress(all.length);
+    if (batch.length < LIMIT) break;
+    before = batch[batch.length - 1].timestamp;
+  }
+  return all;
+}
+
+// ── Top cards ─────────────────────────────────────────────
+function applyCardBanner(el, bannerUrl, color) {
+  if (bannerUrl) { el.style.setProperty('--banner-url', `url('${bannerUrl}')`); el.classList.add('has-banner'); }
+  if (color) el.style.setProperty('--color-tint', `#${color}`);
+}
+
+function makeInfoAvatar(url, name, id, size = 56) {
+  const el = document.createElement('div');
+  el.style.cssText = `width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:${randColor(id||name||'?')}`;
+  if (url) {
+    const img = document.createElement('img');
+    img.src = url; img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    img.onerror = () => { img.remove(); el.textContent = initial(name); };
+    el.appendChild(img);
+  } else { el.textContent = initial(name); }
+  return el;
+}
+
+function renderSystemCard(sys) {
+  const card = document.getElementById('system-card');
+  card.innerHTML = '<div class="info-card-label">System</div>';
+  applyCardBanner(card, sys.banner, sys.color);
+  card.appendChild(makeInfoAvatar(sys.avatar_url, sys.name, sys.id, 56));
+  const text = document.createElement('div');
+  text.className = 'info-text';
+  text.innerHTML = `<div class="info-name-row"><div class="info-name">${esc(sys.name||'Unnamed System')}</div>${sys.pronouns?`<div class="info-pronouns">${esc(sys.pronouns)}</div>`:''}</div><div class="info-id">${esc(sys.id||'')}</div>`;
+  card.appendChild(text);
+}
+
+
+// ── Small member avatar (for leaderboard) ─────────────────
+function makeMiniAvatar(m) {
+  const el = document.createElement('div');
+  el.className = 'lb-avatar';
+  el.style.background = m?.color ? `#${m.color}` : randColor(m?.id || '?');
+  if (m?.avatar_url) {
+    const img = document.createElement('img');
+    img.src = m.avatar_url; img.alt = '';
+    img.onerror = () => { img.remove(); el.textContent = initial(m?.display_name || m?.name); };
+    el.appendChild(img);
+  } else { el.textContent = initial(m?.display_name || m?.name); }
+  return el;
+}
+
+// ── Compute stats from all switches ───────────────────────
+function computeStats(switches, memberMap) {
+  const now = Date.now();
+  const todayStart  = startOfDay(new Date(now)).getTime();
+  const weekStart   = startOfWeek(new Date(now)).getTime();
+  const monthStart  = startOfMonth(new Date(now)).getTime();
+  const week7Start  = now - 7 * 24 * 60 * 60 * 1000;
+  const month30Start = now - 30 * 24 * 60 * 60 * 1000;
+
+  // Switch counts
+  let countToday = 0, countWeek = 0, countMonth = 0;
+  for (const sw of switches) {
+    const t = new Date(sw.timestamp).getTime();
+    if (t >= todayStart)  countToday++;
+    if (t >= weekStart)   countWeek++;
+    if (t >= monthStart)  countMonth++;
+  }
+
+  // For frequency: accumulate front time per member per window
+  // Also track co-fronting pairs (all-time)
+  const frontTime7d   = {};  // memberId → ms
+  const frontTime30d  = {};
+  const frontTimeAll  = {};
+  const coPairs       = {};  // "id1|id2" → count (by number of switches)
+
+  for (let i = 0; i < switches.length; i++) {
+    const sw = switches[i];
+    const start = new Date(sw.timestamp).getTime();
+    const end   = i + 1 < switches.length
+      ? new Date(switches[i + 1].timestamp).getTime()
+      : now; // last switch is "still active"
+    const duration = Math.max(0, end - start);
+
+    const members = (sw.members || []).map(x => typeof x === 'string' ? x : x.id);
+
+    // Per-member duration
+    for (const id of members) {
+      // All time
+      frontTimeAll[id] = (frontTimeAll[id] || 0) + duration;
+
+      // Last 7 days — clip to window
+      const clippedStart7 = Math.max(start, week7Start);
+      const clippedEnd7   = Math.min(end, now);
+      if (clippedEnd7 > clippedStart7) {
+        frontTime7d[id] = (frontTime7d[id] || 0) + (clippedEnd7 - clippedStart7);
+      }
+
+      // Last 30 days — clip to window
+      const clippedStart30 = Math.max(start, month30Start);
+      const clippedEnd30   = Math.min(end, now);
+      if (clippedEnd30 > clippedStart30) {
+        frontTime30d[id] = (frontTime30d[id] || 0) + (clippedEnd30 - clippedStart30);
+      }
+    }
+
+    // Co-fronting pairs (count switches with 2+ members)
+    if (members.length >= 2) {
+      const sorted = [...members].sort();
+      for (let a = 0; a < sorted.length; a++) {
+        for (let b = a + 1; b < sorted.length; b++) {
+          const key = `${sorted[a]}|${sorted[b]}`;
+          coPairs[key] = (coPairs[key] || 0) + 1;
+        }
+      }
+    }
+  }
+
+  // Top 3 for each window
+  function top3(map) {
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id, ms]) => ({ id, ms }));
+  }
+
+  // Top co-fronts
+  const topCoPairs = Object.entries(coPairs)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([key, count]) => {
+      const [a, b] = key.split('|');
+      return { ids: [a, b], count };
+    });
+
+  return {
+    switchCounts: { today: countToday, week: countWeek, month: countMonth, total: switches.length },
+    frontTime7d:   top3(frontTime7d),
+    frontTime30d:  top3(frontTime30d),
+    frontTimeAll:  top3(frontTimeAll),
+    topCoPairs,
+  };
+}
+
+// ── Render analytics ──────────────────────────────────────
+let activePeriod = 'week'; // '7d' | '30d' | 'all'
+
+function renderAnalytics(stats, memberMap) {
+  const root = document.getElementById('analytics-root');
+  root.innerHTML = '';
+
+  const grid = document.createElement('div');
+  grid.className = 'analytics-grid';
+
+  // ── Switch counts ──
+  const countsCard = document.createElement('div');
+  countsCard.className = 'stat-card full-width';
+  countsCard.style.animationDelay = '0s';
+  countsCard.innerHTML = `<div class="stat-card-title">Switches</div>`;
+  const countGrid = document.createElement('div');
+  countGrid.className = 'switch-counts';
+
+  const countItems = [
+    { label: 'Today',      val: stats.switchCounts.today,  accent: true },
+    { label: 'This Week',  val: stats.switchCounts.week,   accent: false },
+    { label: 'This Month', val: stats.switchCounts.month,  accent: false },
+    { label: 'All Time',   val: stats.switchCounts.total,  accent: false },
+  ];
+  countItems.forEach(({ label, val, accent }) => {
+    const item = document.createElement('div');
+    item.className = 'switch-count-item';
+    item.innerHTML = `
+      <div class="switch-count-value${accent?' accent':''}">${val}</div>
+      <div class="switch-count-label">${label}</div>
+    `;
+    countGrid.appendChild(item);
+  });
+  countsCard.appendChild(countGrid);
+  grid.appendChild(countsCard);
+
+  // ── Front frequency ──
+  const freqCard = document.createElement('div');
+  freqCard.className = 'stat-card';
+  freqCard.style.animationDelay = '0.06s';
+
+  const freqTitle = document.createElement('div');
+  freqTitle.className = 'stat-card-title';
+  freqTitle.textContent = 'Top Fronters';
+
+  const periodTabs = document.createElement('div');
+  periodTabs.className = 'period-tabs';
+  [['7d','Last 7 Days'],['30d','Last 30 Days'],['all','All Time']].forEach(([key, label]) => {
+    const tab = document.createElement('div');
+    tab.className = 'period-tab' + (activePeriod === key ? ' active' : '');
+    tab.textContent = label;
+    tab.onclick = () => {
+      activePeriod = key;
+      periodTabs.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderLeaderboard(lbContainer, key, stats, memberMap);
+    };
+    periodTabs.appendChild(tab);
+  });
+
+  const lbContainer = document.createElement('div');
+  renderLeaderboard(lbContainer, activePeriod, stats, memberMap);
+
+  freqCard.appendChild(freqTitle);
+  freqCard.appendChild(periodTabs);
+  freqCard.appendChild(lbContainer);
+  grid.appendChild(freqCard);
+
+  // ── Co-fronting ──
+  const coCard = document.createElement('div');
+  coCard.className = 'stat-card';
+  coCard.style.animationDelay = '0.09s';
+  coCard.innerHTML = `<div class="stat-card-title">Most Co-Fronts</div>`;
+
+  const cofronts = document.createElement('div');
+  cofronts.className = 'cofronts';
+
+  if (!stats.topCoPairs.length) {
+    cofronts.innerHTML = '<div class="stat-empty">No co-fronting data yet.</div>';
+  } else {
+    const maxCount = stats.topCoPairs[0].count;
+    stats.topCoPairs.forEach(({ ids, count }) => {
+      const row = document.createElement('div');
+      row.className = 'cofront-row';
+
+      const avsWrap = document.createElement('div');
+      avsWrap.className = 'cofront-avatars';
+      ids.forEach(id => avsWrap.appendChild(makeMiniAvatar(memberMap[id])));
+
+      const info = document.createElement('div');
+      info.className = 'cofront-info';
+      const names = ids.map(id => memberMap[id] ? (memberMap[id].display_name || memberMap[id].name) : id);
+      info.innerHTML = `
+        <div class="cofront-names">${names.map(esc).join(' + ')}</div>
+        <div class="cofront-sub">${count} switch${count !== 1 ? 'es' : ''} together</div>
+      `;
+
+      const pct = Math.round((count / maxCount) * 100);
+      const barWrap = document.createElement('div');
+      barWrap.className = 'lb-bar-wrap';
+      barWrap.innerHTML = `<div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${pct}%;background:#5865f2"></div></div>`;
+
+      row.appendChild(avsWrap);
+      row.appendChild(info);
+      row.appendChild(barWrap);
+      grid.appendChild; // just for reference
+      cofronts.appendChild(row);
+    });
+  }
+  coCard.appendChild(cofronts);
+  grid.appendChild(coCard);
+
+  root.appendChild(grid);
+}
+
+function renderLeaderboard(container, period, stats, memberMap) {
+  container.innerHTML = '';
+  const data = period === '7d' ? stats.frontTime7d : period === '30d' ? stats.frontTime30d : stats.frontTimeAll;
+
+  if (!data.length) {
+    container.innerHTML = '<div class="stat-empty">No fronting data for this period.</div>';
+    return;
+  }
+
+  const lb = document.createElement('div');
+  lb.className = 'leaderboard';
+  const maxMs = data[0]?.ms || 1;
+  const rankClasses = ['gold', 'silver', 'bronze'];
+  const rankSymbols = ['1', '2', '3'];
+
+  data.forEach(({ id, ms }, i) => {
+    const m = memberMap[id];
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+
+    const rank = document.createElement('div');
+    rank.className = `lb-rank ${rankClasses[i] || ''}`;
+    rank.textContent = rankSymbols[i] || String(i + 1);
+
+    const av = makeMiniAvatar(m);
+    const info = document.createElement('div');
+    info.className = 'lb-info';
+    const name = m ? (m.display_name || m.name) : id;
+    info.innerHTML = `
+      <div class="lb-name" style="${m?.color?`color:#${m.color}`:''}">${esc(name)}</div>
+      <div class="lb-sub">${fmtDuration(ms)} fronting</div>
+    `;
+
+    const pct = Math.round((ms / maxMs) * 100);
+    const barWrap = document.createElement('div');
+    barWrap.className = 'lb-bar-wrap';
+    const accentColor = m?.color ? `#${m.color}` : 'var(--accent)';
+    barWrap.innerHTML = `<div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${pct}%;background:${accentColor}"></div></div>`;
+
+    const val = document.createElement('div');
+    val.className = 'lb-val';
+    val.textContent = fmtDuration(ms);
+
+    row.appendChild(rank);
+    row.appendChild(av);
+    row.appendChild(info);
+    row.appendChild(barWrap);
+    row.appendChild(val);
+    lb.appendChild(row);
+  });
+
+  container.appendChild(lb);
+}
+
+// ── Loading UI ────────────────────────────────────────────
+function showLoading(label = 'Loading analytics…', progress = null) {
+  const root = document.getElementById('analytics-root');
+  root.innerHTML = `
+    <div class="loading-wrap">
+      <div class="loading-spinner"></div>
+      <div class="loading-label">${esc(label)}</div>
+      ${progress !== null ? `<div class="loading-progress" id="load-progress">Fetched ${progress} switches…</div>` : ''}
+    </div>
+  `;
+}
+
+function updateLoadingProgress(n) {
+  const el = document.getElementById('load-progress');
+  if (el) el.textContent = `Fetched ${n} switches…`;
+}
+
+// ── Boot ──────────────────────────────────────────────────
+function renderFronterCard(fronters) {
+  const list = Array.isArray(fronters) ? fronters : (fronters ? [fronters] : []);
+  const card = document.getElementById('fronter-card');
+  let idx = 0;
+
+  function draw() {
+    card.innerHTML = '<div class="info-card-label">Currently Fronting</div>';
+    card.style.removeProperty('--banner-url');
+    card.style.removeProperty('--color-tint');
+    card.classList.remove('has-banner');
+
+    if (!list.length) {
+      const emptyAv = document.createElement('div');
+      emptyAv.style.cssText = 'width:56px;height:56px;border-radius:50%;background:var(--bg-tertiary);border:1px dashed var(--border);flex-shrink:0';
+      card.appendChild(emptyAv);
+      const emptyText = document.createElement('div');
+      emptyText.className = 'info-text';
+      emptyText.innerHTML = '<div class="info-name" style="color:var(--text-muted);font-style:italic;font-weight:400">No fronter registered</div>';
+      card.appendChild(emptyText);
+      return;
+    }
+
+    const fronter = list[idx];
+    applyCardBanner(card, fronter.banner, fronter.color);
+    const av = makeAvatar(fronter.avatar_url, fronter.display_name || fronter.name, 56);
+    if (fronter.color) av.style.background = '#' + fronter.color;
+    card.appendChild(av);
+
+    const text = document.createElement('div');
+    text.className = 'info-text';
+    text.innerHTML = `
+      <div class="info-name-row">
+        <div class="info-name">${esc(fronter.display_name || fronter.name)}</div>
+        ${fronter.pronouns ? '<div class="info-pronouns">' + esc(fronter.pronouns) + '</div>' : ''}
+      </div>
+      <div class="info-id">${esc(fronter.id || '')}</div>
+    `;
+    card.appendChild(text);
+
+    if (list.length > 1) {
+      const prevNav = document.createElement('div');
+      prevNav.className = 'fronter-nav prev';
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'fronter-arrow';
+      prevBtn.innerHTML = '&#8249;';
+      prevBtn.title = 'Previous fronter';
+      prevBtn.onclick = e => { e.stopPropagation(); idx = (idx - 1 + list.length) % list.length; draw(); };
+      prevNav.appendChild(prevBtn);
+      card.appendChild(prevNav);
+
+      const nextNav = document.createElement('div');
+      nextNav.className = 'fronter-nav next';
+      const pipWrap = document.createElement('div');
+      pipWrap.className = 'fronter-pip-wrap';
+      list.forEach((_, i) => {
+        const pip = document.createElement('div');
+        pip.className = 'fronter-pip' + (i === idx ? ' active' : '');
+        pipWrap.appendChild(pip);
+      });
+      nextNav.appendChild(pipWrap);
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'fronter-arrow';
+      nextBtn.innerHTML = '&#8250;';
+      nextBtn.title = 'Next fronter';
+      nextBtn.onclick = e => { e.stopPropagation(); idx = (idx + 1) % list.length; draw(); };
+      nextNav.appendChild(nextBtn);
+      card.appendChild(nextNav);
+    }
+  }
+
+  draw();
+}
+
+async function boot() {
+  // Render top cards from cache
+  const cached = _loadCache();
+  if (cached) {
+    if (cached.system)  renderSystemCard(cached.system);
+    if (cached.fronter !== undefined) renderFronterCard(cached.fronter);
+  }
+
+  showLoading('Fetching data…');
+
+  try {
+    const [system, membersRaw, switches] = await Promise.all([
+      apiFetch('/systems/@me'),
+      apiFetch('/systems/@me/members'),
+      // Start with nothing — we'll fetch all below
+      Promise.resolve([]),
+    ]);
+
+    // Build member map
+    const memberMap = {};
+    membersRaw.forEach(m => { memberMap[m.id] = m; });
+
+    // Fronter
+    let fronter = null;
+    const swFirst = await apiFetch('/systems/@me/switches?limit=1');
+    if (swFirst.length && swFirst[0].members?.length) {
+      const fronterIds = swFirst[0].members.map(x => typeof x === 'string' ? x : x.id);
+      const fronterList = fronterIds.map(id => memberMap[id]).filter(Boolean);
+      fronter = fronterList.length > 0 ? fronterList : null;
+    }
+
+    const prev = _loadCache();
+    _saveCache({ system, members: membersRaw, fronter: fronter || prev?.fronter || null });
+    renderSystemCard(system);
+    renderFronterCard(fronter);
+
+    // Fetch ALL switches for stats
+    showLoading('Fetching all switches…', 0);
+    const allSwitches = await fetchAllSwitches(n => updateLoadingProgress(n));
+
+    const stats = computeStats(allSwitches, memberMap);
+    renderAnalytics(stats, memberMap);
+
+  } catch (e) {
+    console.error('Boot error:', e);
+    if (e.message?.includes('401') || e.message?.includes('403')) {
+      sessionStorage.removeItem('pk_token');
+      window.location.href = 'index.html';
+    }
+    document.getElementById('analytics-root').innerHTML = `
+      <div class="error-banner">Failed to load analytics. Please refresh and try again.</div>
+    `;
+  }
+}
+
+function logout() { sessionStorage.removeItem('pk_token'); window.location.href = 'index.html'; }
+
+boot();
+</script>
+</body>
+</html>

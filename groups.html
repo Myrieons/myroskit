@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MYROSKIT — Groups</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: rgba(28, 29, 32, 0.65);
+    --bg-tertiary: rgba(33, 34, 38, 0.6);
+    --bg-hover: rgba(38, 39, 44, 0.75);
+    --accent: #6b6f76;
+    --accent-hover: #55585e;
+    --accent-rgb: 107, 111, 118;
+    --green: #23a559;
+    --text-primary: #f2f3f5;
+    --text-secondary: #b5bac1;
+    --text-muted: #80848e;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --radius: 12px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+
+  /* ── Topline ── */
+  .topline {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 14px;
+  }
+  .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .wordmark .myros { color: var(--text-primary); }
+  .wordmark .kit   { color: var(--accent); }
+  .btn-logout {
+    background: none; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-muted);
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; cursor: pointer;
+    transition: color 0.1s, border-color 0.1s;
+  }
+  .btn-logout:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* ── Info cards ── */
+  .info-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 12px;
+  }
+  .info-card {
+    position: relative; background: var(--bg-secondary);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; display: flex; align-items: center;
+    gap: 14px; min-width: 0; overflow: hidden; isolation: isolate;
+  }
+  .info-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: var(--banner-url, none); background-size: cover;
+    background-position: center; filter: blur(8px) brightness(0.35);
+    transform: scale(1.08); z-index: 0; opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .info-card.has-banner::before { opacity: 1; }
+  .info-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: var(--color-tint, transparent); opacity: 0.18;
+    z-index: 0; pointer-events: none;
+  }
+  .info-card > * { position: relative; z-index: 1; }
+  .info-card-label {
+    position: absolute; top: 10px; right: 12px; font-size: 10px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text-muted); opacity: 0.6; z-index: 1;
+  }
+  .info-text { min-width: 0; flex: 1; }
+  .info-name-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .info-name {
+    font-size: 15px; font-weight: 700; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .info-pronouns {
+    font-size: 12px; color: var(--text-secondary);
+    opacity: 0.45; white-space: nowrap; flex-shrink: 0;
+  }
+  .info-id { font-size: 11px; color: var(--text-muted); font-family: 'Courier New', monospace; margin-top: 3px; }
+
+  /* ── Nav tabs ── */
+  .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .nav-tab {
+    background: rgba(49, 51, 56, 0.4); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-secondary);
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 8px 16px; cursor: pointer; user-select: none;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    flex: 1; text-align: center; white-space: nowrap;
+    text-decoration: none; display: block;
+  }
+  .nav-tab.active {
+    background: #1e1f22;
+    border-color: rgba(255,255,255,0.14);
+    color: var(--text-primary);
+  }
+
+  /* ── Content box ── */
+  .content-box {
+    background: var(--bg-secondary); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 14px; gap: 10px;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--text-muted);
+  }
+
+  /* ── Search + new group row ── */
+  .groups-toolbar {
+    display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+  }
+  .groups-search-wrap { position: relative; flex: 1; }
+  .groups-search-icon {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); color: var(--text-muted);
+    pointer-events: none; display: flex; align-items: center;
+  }
+  .groups-search {
+    width: 100%; background: rgba(30,31,34,0.5);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-primary); font-family: inherit; font-size: 13px;
+    padding: 8px 30px 8px 30px; outline: none;
+    transition: border-color 0.15s;
+  }
+  .groups-search:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+  .groups-search::placeholder { color: var(--text-muted); }
+  .groups-search-clear {
+    position: absolute; right: 8px; top: 50%;
+    transform: translateY(-50%); background: none; border: none;
+    color: var(--text-muted); cursor: pointer; font-size: 14px;
+    padding: 2px 4px; border-radius: 3px; display: none;
+    transition: color 0.1s;
+  }
+  .groups-search-clear:hover { color: var(--text-primary); }
+
+  .btn-new-group {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--accent); border: none;
+    border-radius: var(--radius-sm); color: #fff;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    padding: 8px 14px; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-new-group:hover { background: var(--accent-hover); }
+
+  /* ── Group cards ── */
+  .groups-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+  .group-card {
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    transition: border-color 0.15s; animation: fadeUp 0.2s ease both;
+    position: relative; isolation: isolate;
+  }
+  .group-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: var(--banner-url, none); background-size: cover;
+    background-position: center; filter: blur(8px) brightness(0.3);
+    transform: scale(1.08); z-index: 0; opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .group-card.has-banner::before { opacity: 1; }
+  .group-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: var(--color-tint, transparent); opacity: 0.12;
+    z-index: 0; pointer-events: none;
+  }
+  .group-card > * { position: relative; z-index: 1; }
+  .group-card:hover { border-color: rgba(255,255,255,0.15); }
+
+  .group-main {
+    display: flex; align-items: center;
+    gap: 10px; padding: 11px 12px; cursor: pointer;
+  }
+
+  .group-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; overflow: hidden;
+  }
+  .group-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+  .group-info { flex: 1; min-width: 0; }
+  .group-name-row { display: flex; align-items: baseline; gap: 6px; }
+  .group-name {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .group-display-name {
+    font-size: 11px; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .group-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  .group-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .group-btn {
+    background: var(--bg-hover); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-muted);
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 4px 9px; cursor: pointer;
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+    white-space: nowrap;
+  }
+  .group-btn:hover { color: var(--text-primary); border-color: var(--text-muted); background: var(--border); }
+  .group-btn.edit-btn.editing { color: var(--accent); border-color: var(--accent); }
+  .group-btn.expand-btn .chevron {
+    display: inline-block; transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); line-height: 1;
+  }
+  .group-btn.expand-btn.open .chevron { transform: rotate(180deg); }
+  .group-btn.expand-btn.open { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Expand panel ── */
+  .group-expand {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s cubic-bezier(0.4,0,0.2,1);
+    background: #1a1b1e;
+  }
+  .group-expand-inner {
+    overflow: hidden; border-top: 0px solid var(--border-subtle);
+    transition: border-top-width 0s 0.28s, padding 0s 0.28s, opacity 0.2s ease;
+    padding: 0 14px; opacity: 0; background: #1a1b1e;
+  }
+  .group-expand.open { grid-template-rows: 1fr; }
+  .group-expand.open .group-expand-inner {
+    border-top-width: 1px; padding: 14px; opacity: 1;
+    transition: border-top-width 0s, padding 0s, opacity 0.2s ease 0.08s;
+  }
+
+  /* ── Fields grid ── */
+  .group-fields {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px 12px; margin-bottom: 12px;
+  }
+  .group-field { min-width: 0; }
+  .group-field-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 3px;
+  }
+  .group-field-value { font-size: 12px; color: var(--text-secondary); word-break: break-word; }
+  .group-field-value.mono { font-family: 'Courier New', monospace; font-size: 11px; }
+  .color-dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    vertical-align: middle; margin-right: 4px; border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  /* ── Edit inputs ── */
+  .group-edit-input {
+    width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: inherit; font-size: 12px; padding: 4px 7px;
+    outline: none; transition: border-color 0.15s; display: none;
+  }
+  .group-fields.edit-mode .group-field-value { display: none; }
+  .group-fields.edit-mode .group-edit-input { display: block; }
+  .group-edit-input:focus { border-color: var(--accent); }
+
+  /* Color picker in edit mode */
+  .group-color-edit {
+    display: none; align-items: center; gap: 6px; margin-top: 2px;
+  }
+  .group-fields.edit-mode .group-color-edit { display: flex; }
+  .group-fields.edit-mode .group-color-val { display: none; }
+  .group-color-picker-wrap { position: relative; width: 26px; height: 26px; flex-shrink: 0; }
+  .group-color-swatch {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--border); cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .group-color-swatch:hover { border-color: var(--text-muted); transform: scale(1.1); }
+  .group-color-native {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%; border: none; padding: 0;
+  }
+  .group-color-hex {
+    flex: 1; background: var(--bg-primary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: 'Courier New', monospace; font-size: 11px;
+    padding: 4px 6px; outline: none; transition: border-color 0.15s; min-width: 0;
+  }
+  .group-color-hex:focus { border-color: var(--accent); }
+  .group-color-clear {
+    background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-muted); font-family: inherit; font-size: 10px;
+    padding: 3px 7px; cursor: pointer; transition: color 0.1s, border-color 0.1s;
+    white-space: nowrap;
+  }
+  .group-color-clear:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* ── Media (icon / banner) ── */
+  .group-media-section { display: none; margin-bottom: 10px; }
+  .group-media-section.visible { display: block; }
+  .group-media-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .group-media-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted); width: 44px; flex-shrink: 0;
+  }
+  .group-media-input {
+    flex: 1; background: var(--bg-primary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: inherit; font-size: 11px; padding: 4px 7px;
+    outline: none; transition: border-color 0.15s;
+  }
+  .group-media-input:focus { border-color: var(--accent); }
+  .group-media-preview {
+    width: 32px; height: 32px; border-radius: 4px; object-fit: cover;
+    border: 1px solid var(--border); display: none;
+  }
+  .group-media-preview.visible { display: block; }
+
+  /* ── Bio ── */
+  .group-bio-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;
+  }
+  .group-bio {
+    font-size: 12px; color: var(--text-secondary);
+    line-height: 1.65; word-break: break-word; margin-bottom: 10px;
+  }
+  .group-bio p { margin-bottom: 6px; }
+  .group-bio p:last-child { margin-bottom: 0; }
+  .group-bio strong { color: var(--text-primary); }
+  .group-bio em { font-style: italic; }
+  .group-bio a { color: var(--accent); text-decoration: none; }
+  .group-bio a:hover { text-decoration: underline; }
+  .group-bio-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+  .group-bio-edit {
+    width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: 'Courier New', monospace; font-size: 12px;
+    padding: 7px 9px; outline: none; resize: vertical; min-height: 70px;
+    transition: border-color 0.15s; display: none; line-height: 1.55;
+  }
+  .group-bio-edit:focus { border-color: var(--accent); }
+  .edit-mode-bio .group-bio, .edit-mode-bio .group-bio-label { display: none; }
+  .edit-mode-bio .group-bio-edit { display: block; }
+
+  /* ── Members inside group ── */
+  .group-members-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+  .group-members-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .group-members-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted);
+  }
+  .group-members-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .group-member-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 8px 3px 4px;
+    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  }
+  .group-member-chip img {
+    width: 16px; height: 16px; border-radius: 50%; object-fit: cover;
+  }
+  .group-member-chip .chip-av {
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; flex-shrink: 0; overflow: hidden;
+  }
+  .group-members-empty { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+  /* Edit member checklist (shown in edit mode) */
+  .group-member-checklist {
+    display: none; flex-direction: column; gap: 2px;
+    max-height: 180px; overflow-y: auto;
+    background: rgba(0,0,0,0.2); border-radius: var(--radius-sm);
+    padding: 6px;
+  }
+  .group-member-checklist.visible { display: flex; }
+  .checklist-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 6px; border-radius: 4px;
+    cursor: pointer; user-select: none;
+    transition: background 0.1s;
+  }
+  .checklist-item:hover { background: rgba(255,255,255,0.04); }
+  .checklist-box {
+    width: 14px; height: 14px; border-radius: 3px;
+    border: 1.5px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .checklist-item.checked .checklist-box {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .checklist-item.checked .checklist-box::after {
+    content: ''; display: block; width: 8px; height: 4px;
+    border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+  .checklist-name { font-size: 11px; font-weight: 600; color: var(--text-primary); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .checklist-pronouns { font-size: 10px; color: var(--text-muted); }
+
+  /* ── Edit actions ── */
+  .group-edit-actions {
+    display: none; gap: 6px; margin-top: 12px; justify-content: flex-end; align-items: center;
+  }
+  .group-edit-actions.visible { display: flex; }
+  .group-save-status {
+    font-size: 11px; font-weight: 600; color: var(--green);
+    opacity: 0; transition: opacity 0.2s; margin-right: auto;
+  }
+  .group-save-status.visible { opacity: 1; }
+  .btn-cancel-group {
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-secondary);
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 5px 12px; cursor: pointer; transition: background 0.1s;
+  }
+  .btn-cancel-group:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .btn-save-group {
+    background: var(--accent); border: none; border-radius: var(--radius-sm);
+    color: #fff; font-family: inherit; font-size: 11px; font-weight: 700;
+    padding: 5px 14px; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-save-group:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-save-group:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-delete-group {
+    background: none; border: 1px solid rgba(237,66,69,0.35);
+    border-radius: var(--radius-sm); color: #f38ba8;
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 5px 12px; cursor: pointer; transition: background 0.1s, border-color 0.1s;
+  }
+  .btn-delete-group:hover { background: rgba(237,66,69,0.1); border-color: rgba(237,66,69,0.6); }
+
+
+  /* ── ImgBB upload button ── */
+  .upload-btn {
+    background: var(--bg-hover); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-muted);
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 0 8px; cursor: pointer; height: 100%;
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+    display: none; align-items: center; gap: 4px; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .upload-btn.imgbb-ready { display: inline-flex; }
+  .upload-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+  .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .upload-btn.uploading { opacity: 0.6; cursor: not-allowed; }
+
+  /* ── New group panel ── */
+  .new-group-box {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0;
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .new-group-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px; cursor: pointer; user-select: none;
+    transition: background 0.12s;
+  }
+  .new-group-header:hover { background: rgba(255,255,255,0.02); }
+  .new-group-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--text-muted);
+  }
+  .new-group-chevron {
+    color: var(--text-muted); font-size: 13px;
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .new-group-box.open .new-group-chevron { transform: rotate(180deg); }
+  .new-group-body {
+    display: none; padding: 0 16px 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .new-group-box.open .new-group-body { display: block; }
+  .new-group-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 14px;
+  }
+  .new-group-field { min-width: 0; }
+  .new-group-label {
+    display: block; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); margin-bottom: 5px;
+  }
+  .new-group-input {
+    width: 100%; background: rgba(13,13,15,0.5); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: inherit; font-size: 13px; padding: 7px 10px;
+    outline: none; transition: border-color 0.15s;
+  }
+  .new-group-input:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+  .new-group-input::placeholder { color: var(--text-muted); }
+  .new-group-desc {
+    width: 100%; background: rgba(13,13,15,0.5); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: 'Courier New', monospace; font-size: 12px;
+    padding: 7px 10px; outline: none; resize: vertical; min-height: 60px;
+    transition: border-color 0.15s; grid-column: 1 / -1;
+  }
+  .new-group-desc:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+  .new-group-desc::placeholder { color: var(--text-muted); }
+  .new-group-color-row {
+    display: flex; align-items: center; gap: 8px; grid-column: 1 / -1;
+  }
+  .new-group-actions {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 8px; margin-top: 14px;
+  }
+  .new-group-status {
+    font-size: 12px; font-weight: 600; color: var(--green);
+    opacity: 0; transition: opacity 0.2s; margin-right: auto;
+  }
+  .new-group-status.visible { opacity: 1; }
+  .new-group-status.error { color: #ed4245; }
+  .btn-create-group {
+    background: var(--accent); border: none; border-radius: var(--radius-sm);
+    color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 8px 18px; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-create-group:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-create-group:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── No results / empty ── */
+  .groups-empty {
+    text-align: center; padding: 36px 20px;
+    color: var(--text-muted); font-size: 13px;
+    display: none;
+  }
+  .groups-empty .empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .page-btn {
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-secondary);
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s; user-select: none;
+  }
+  .page-btn:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-primary); border-color: var(--text-muted); }
+  .page-btn:disabled { opacity: 0.35; cursor: default; }
+  .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .page-info { font-size: 12px; color: var(--text-muted); padding: 0 4px; }
+
+  /* ── Skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
+  @media (max-width: 620px) {
+    .info-row { grid-template-columns: 1fr; }
+    .nav-tabs { flex-wrap: wrap; }
+    .nav-tab { flex: none; font-size: 12px; padding: 7px 12px; }
+    .group-fields { grid-template-columns: repeat(2, 1fr); }
+    .new-group-grid { grid-template-columns: 1fr; }
+  }
+  /* ── Multi-fronter carousel ── */
+  .fronter-nav {
+    position: absolute; bottom: 7px; z-index: 2;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .fronter-nav.prev { left: 8px; }
+  .fronter-nav.next { right: 8px; }
+  .fronter-arrow {
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
+    color: var(--text-secondary); cursor: pointer;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s, color 0.1s; font-size: 13px; flex-shrink: 0; padding: 0;
+  }
+  .fronter-arrow:hover { background: rgba(0,0,0,0.6); color: var(--text-primary); }
+  .fronter-pip-wrap { display: flex; gap: 3px; align-items: center; }
+  .fronter-pip {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); transition: background 0.15s;
+  }
+  .fronter-pip.active { background: rgba(255,255,255,0.8); }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Logo + logout -->
+  <div class="topline">
+    <div class="wordmark"><span class="myros">MYROS</span><span class="kit">KIT</span></div>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
+
+  <!-- System + Fronter cards -->
+  <div class="info-row">
+    <div class="info-card" id="system-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skeleton" style="height:15px;width:120px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:11px;width:80px"></div>
+      </div>
+    </div>
+    <div class="info-card" id="fronter-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skeleton" style="height:10px;width:60px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:15px;width:100px;margin-bottom:6px"></div>
+        <div class="skeleton" style="height:11px;width:70px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="nav-tabs">
+    <a class="nav-tab" href="dashboard.html">Members</a>
+    <a class="nav-tab" href="system.html">System</a>
+    <a class="nav-tab" href="switches.html">Switch History</a>
+    <a class="nav-tab active" href="groups.html">Group List</a>
+    <a class="nav-tab" href="analytics.html">Analytics</a>
+    <a class="nav-tab" href="settings.html">Settings</a>
+  </div>
+
+  <!-- New Group panel -->
+  <div class="new-group-box" id="new-group-box">
+    <div class="new-group-header" onclick="toggleNewGroup()">
+      <div class="new-group-title">Create New Group</div>
+      <span class="new-group-chevron">▾</span>
+    </div>
+    <div class="new-group-body">
+      <div class="new-group-grid">
+        <div class="new-group-field">
+          <label class="new-group-label">Name <span style="color:var(--accent)">*</span></label>
+          <input class="new-group-input" id="ng-name" type="text" placeholder="Group name" maxlength="100" />
+        </div>
+        <div class="new-group-field">
+          <label class="new-group-label">Display Name</label>
+          <input class="new-group-input" id="ng-display-name" type="text" placeholder="Optional display name" maxlength="100" />
+        </div>
+        <div class="new-group-field" style="grid-column:1/-1">
+          <label class="new-group-label">Description</label>
+          <textarea class="new-group-desc" id="ng-description" placeholder="Group description (supports markdown)…"></textarea>
+        </div>
+        <div class="new-group-field" style="grid-column:1/-1">
+          <label class="new-group-label">Icon URL</label>
+          <input class="new-group-input" id="ng-icon" type="url" placeholder="https://…" />
+        </div>
+        <div class="new-group-field" style="grid-column:1/-1">
+          <label class="new-group-label">Color</label>
+          <div class="new-group-color-row">
+            <div class="group-color-picker-wrap">
+              <div class="group-color-swatch" id="ng-color-swatch" style="background:#888"></div>
+              <input class="group-color-native" id="ng-color-native" type="color" value="#e8457a" />
+            </div>
+            <input class="group-color-hex" id="ng-color-hex" type="text" placeholder="#rrggbb" maxlength="7" style="flex:0 1 110px" />
+            <button class="group-color-clear" onclick="clearNewGroupColor()">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="new-group-actions">
+        <span class="new-group-status" id="ng-status"></span>
+        <button class="btn-create-group" id="ng-create-btn" onclick="createGroup()">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content box -->
+  <div class="content-box">
+    <div class="section-header">
+      <div class="section-title">Groups</div>
+      <div id="group-count" style="font-size:11px;color:var(--text-muted)"></div>
+    </div>
+
+    <!-- Search -->
+    <div class="groups-toolbar">
+      <div class="groups-search-wrap">
+        <span class="groups-search-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </span>
+        <input type="search" class="groups-search" id="groups-search"
+          placeholder="Search groups…"
+          oninput="onSearch(this.value)" autocomplete="off" />
+        <button class="groups-search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+      </div>
+    </div>
+
+    <div class="groups-empty" id="groups-empty">
+      <div class="empty-icon">🗂️</div>
+      No groups found.
+    </div>
+
+    <!-- Skeleton -->
+    <div class="groups-grid" id="groups-grid">
+      <div class="group-card"><div class="group-main"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:100px;margin-bottom:5px"></div><div class="skeleton" style="height:10px;width:60px"></div></div></div></div>
+      <div class="group-card"><div class="group-main"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:80px;margin-bottom:5px"></div><div class="skeleton" style="height:10px;width:50px"></div></div></div></div>
+      <div class="group-card"><div class="group-main"><div class="skeleton" style="width:36px;height:36px;border-radius:8px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:120px;margin-bottom:5px"></div><div class="skeleton" style="height:10px;width:70px"></div></div></div></div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<script>
+const API   = 'https://api.pluralkit.me/v2';
+
+// ── ImgBB upload utility ──────────────────────────────────
+const IMGBB_KEY = 'imgbb_api_key';
+
+function getImgbbKey() { return localStorage.getItem(IMGBB_KEY) || ''; }
+
+async function imgbbUpload(file, onDone, onError, btn) {
+  const key = getImgbbKey();
+  if (!key) { onError('No ImgBB API key set. Add one in Settings.'); return; }
+
+  btn.classList.add('uploading');
+  btn.disabled = true;
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>';
+
+  try {
+    const reader = new FileReader();
+    const b64 = await new Promise((res, rej) => {
+      reader.onload = e => res(e.target.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    const form = new FormData();
+    form.append('key', key);
+    form.append('image', b64);
+    form.append('name', file.name.replace(/\.[^.]+$/, ''));
+
+    const r = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form });
+    const data = await r.json();
+
+    if (data.success) {
+      onDone(data.data.url);
+    } else {
+      onError(data.error?.message || 'Upload failed.');
+    }
+  } catch(e) {
+    onError('Upload failed — check your connection.');
+  }
+
+  btn.classList.remove('uploading');
+  btn.disabled = false;
+  btn.innerHTML = origHTML;
+}
+
+function makeUploadBtn(inp, previewEl, isRound) {
+  const key = getImgbbKey();
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  document.body.appendChild(fileInput);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'upload-btn' + (key ? ' imgbb-ready' : '');
+  btn.title = key ? 'Upload image' : 'Add an ImgBB API key in Settings to upload images';
+  btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload';
+
+  btn.onclick = () => { if (getImgbbKey()) fileInput.click(); };
+
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    imgbbUpload(file,
+      url => {
+        inp.value = url;
+        inp.dispatchEvent(new Event('input'));
+        if (previewEl) {
+          previewEl.src = url;
+          previewEl.classList.add('visible');
+          if (isRound) previewEl.style.borderRadius = '50%';
+        }
+      },
+      err => alert('Upload error: ' + err),
+      btn
+    );
+    fileInput.value = '';
+  };
+
+  return btn;
+}
+
+// ── Apply saved accent color ───────────────────────────────
+const token = sessionStorage.getItem('pk_token');
+if (!token) window.location.href = 'index.html';
+
+const PER_PAGE = 10;
+const COLORS = ['#e8457a','#eb459e','#57f287','#fee75c','#ed4245','#1b9adf','#f47fff','#ff944d'];
+
+let allGroups = [];
+let allMembers = [];
+let memberMap = {};
+let filteredGroups = [];
+let currentPage = 1;
+let searchQuery = '';
+
+function randColor(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xffffffff;
+  return COLORS[Math.abs(h) % COLORS.length];
+}
+function initial(s) { return s ? s.charAt(0).toUpperCase() : '?'; }
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Cache ─────────────────────────────────────────────────
+function _saveCache(data) { try { sessionStorage.setItem('pk_cache', JSON.stringify(data)); } catch {} }
+function _loadCache() {
+  try { const r = sessionStorage.getItem('pk_cache'); return r ? JSON.parse(r) : null; } catch { return null; }
+}
+
+// ── Markdown (minimal) ────────────────────────────────────
+function renderMarkdown(text) {
+  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s = s.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  s = s.replace(/~~(.+?)~~/g,'<s>$1</s>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s = s.split(/\n{2,}/).map(b => { b = b.trim(); if (!b) return ''; if (/^</.test(b)) return b; return `<p>${b.replace(/\n/g,'<br>')}</p>`; }).join('');
+  return s;
+}
+
+// ── Avatar ────────────────────────────────────────────────
+function makeAvatar(url, name, id, size = 36) {
+  const el = document.createElement('div');
+  el.style.cssText = `width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;font-weight:700;border-radius:${size > 40 ? '50%' : '8px'};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:${randColor(id||name||'?')}`;
+  if (url) {
+    const img = document.createElement('img');
+    img.src = url; img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    img.onerror = () => { img.remove(); el.textContent = initial(name); };
+    el.appendChild(img);
+  } else { el.textContent = initial(name); }
+  return el;
+}
+
+function applyCardBanner(el, bannerUrl, color) {
+  if (bannerUrl) { el.style.setProperty('--banner-url', `url('${bannerUrl}')`); el.classList.add('has-banner'); }
+  if (color) el.style.setProperty('--color-tint', `#${color}`);
+}
+
+// ── Top cards ─────────────────────────────────────────────
+function renderSystemCard(sys) {
+  const card = document.getElementById('system-card');
+  card.innerHTML = '<div class="info-card-label">System</div>';
+  applyCardBanner(card, sys.banner, sys.color);
+  card.appendChild(makeAvatar(sys.avatar_url, sys.name, sys.id, 56));
+  const text = document.createElement('div');
+  text.className = 'info-text';
+  text.innerHTML = `<div class="info-name-row"><div class="info-name">${esc(sys.name||'Unnamed System')}</div>${sys.pronouns?`<div class="info-pronouns">${esc(sys.pronouns)}</div>`:''}</div><div class="info-id">${esc(sys.id||'')}</div>`;
+  card.appendChild(text);
+}
+
+
+// ── Search ────────────────────────────────────────────────
+function onSearch(val) {
+  searchQuery = val.trim().toLowerCase();
+  document.getElementById('search-clear').style.display = searchQuery ? 'block' : 'none';
+  filteredGroups = searchQuery
+    ? allGroups.filter(g => (g.name||'').toLowerCase().includes(searchQuery) || (g.display_name||'').toLowerCase().includes(searchQuery) || (g.id||'').toLowerCase().includes(searchQuery))
+    : allGroups;
+  renderPage(1);
+}
+
+function clearSearch() {
+  const inp = document.getElementById('groups-search');
+  inp.value = ''; onSearch(''); inp.focus();
+}
+
+// ── Pagination ────────────────────────────────────────────
+function renderPage(page) {
+  currentPage = page;
+  const total = filteredGroups.length;
+  const totalPages = Math.ceil(total / PER_PAGE);
+  const slice = filteredGroups.slice((page-1)*PER_PAGE, page*PER_PAGE);
+
+  const grid = document.getElementById('groups-grid');
+  const empty = document.getElementById('groups-empty');
+  grid.innerHTML = '';
+
+  if (!slice.length) {
+    empty.style.display = 'block';
+    document.getElementById('pagination').innerHTML = '';
+    document.getElementById('group-count').textContent = '';
+    return;
+  }
+  empty.style.display = 'none';
+  document.getElementById('group-count').textContent = `${total} group${total!==1?'s':''}`;
+
+  slice.forEach((g, i) => {
+    grid.appendChild(buildGroupCard(g, i));
+  });
+
+  renderPagination(page, totalPages);
+}
+
+function renderPagination(page, totalPages) {
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  const prev = document.createElement('button');
+  prev.className = 'page-btn'; prev.textContent = '← Prev';
+  prev.disabled = page === 1; prev.onclick = () => renderPage(page-1);
+  pag.appendChild(prev);
+
+  const range = buildRange(page, totalPages);
+  range.forEach(p => {
+    if (p === '…') {
+      const dots = document.createElement('span');
+      dots.className = 'page-info'; dots.textContent = '…';
+      pag.appendChild(dots);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'page-btn' + (p===page?' active':'');
+      btn.textContent = p; btn.onclick = () => renderPage(p);
+      pag.appendChild(btn);
+    }
+  });
+
+  const next = document.createElement('button');
+  next.className = 'page-btn'; next.textContent = 'Next →';
+  next.disabled = page === totalPages; next.onclick = () => renderPage(page+1);
+  pag.appendChild(next);
+}
+
+function buildRange(current, total) {
+  if (total <= 7) return Array.from({length:total},(_,i)=>i+1);
+  const pages = [1];
+  if (current > 3) pages.push('…');
+  for (let p = Math.max(2,current-1); p <= Math.min(total-1,current+1); p++) pages.push(p);
+  if (current < total-2) pages.push('…');
+  pages.push(total);
+  return pages;
+}
+
+// ── Build group card ──────────────────────────────────────
+function buildGroupCard(g, animIdx) {
+  const card = document.createElement('div');
+  card.className = 'group-card';
+  card.style.animationDelay = `${animIdx * 0.04}s`;
+  applyCardBanner(card, g.banner, g.color);
+
+  // ── Main row ──
+  const main = document.createElement('div');
+  main.className = 'group-main';
+
+  const iconEl = document.createElement('div');
+  iconEl.className = 'group-icon';
+  if (g.color) iconEl.style.background = `#${g.color}22`;
+  if (g.icon) {
+    const img = document.createElement('img');
+    img.src = g.icon; img.alt = '';
+    img.onerror = () => { img.remove(); iconEl.textContent = initial(g.name); iconEl.style.fontSize = '18px'; };
+    iconEl.appendChild(img);
+  } else {
+    iconEl.textContent = initial(g.name);
+    iconEl.style.cssText += `background:${g.color?`#${g.color}33`:randColor(g.id)+'33'};font-size:16px;font-weight:700;color:${g.color?`#${g.color}`:'var(--text-secondary)'};`;
+  }
+
+  const info = document.createElement('div');
+  info.className = 'group-info';
+  const nameRow = document.createElement('div');
+  nameRow.className = 'group-name-row';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'group-name';
+  if (g.color) nameEl.style.color = `#${g.color}`;
+  nameEl.textContent = g.display_name || g.name;
+  nameRow.appendChild(nameEl);
+  if (g.display_name && g.name !== g.display_name) {
+    const sub = document.createElement('div');
+    sub.className = 'group-display-name';
+    sub.textContent = g.name;
+    nameRow.appendChild(sub);
+  }
+  const meta = document.createElement('div');
+  meta.className = 'group-meta';
+  meta.textContent = `${(g.members||[]).length} member${(g.members||[]).length!==1?'s':''}  ·  ${esc(g.id)}`;
+  info.appendChild(nameRow);
+  info.appendChild(meta);
+
+  const actions = document.createElement('div');
+  actions.className = 'group-actions';
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'group-btn edit-btn';
+  editBtn.textContent = 'Edit';
+
+  const expandBtn = document.createElement('button');
+  expandBtn.className = 'group-btn expand-btn';
+  expandBtn.innerHTML = '<span class="chevron">▾</span>';
+
+  actions.appendChild(editBtn);
+  actions.appendChild(expandBtn);
+  main.appendChild(iconEl);
+  main.appendChild(info);
+  main.appendChild(actions);
+
+  // ── Expand panel ──
+  const expandPanel = document.createElement('div');
+  expandPanel.className = 'group-expand';
+
+  const inner = document.createElement('div');
+  inner.className = 'group-expand-inner';
+
+  // Fields grid (view + edit)
+  const fieldsDiv = document.createElement('div');
+  fieldsDiv.className = 'group-fields';
+
+  const created = g.created ? new Date(g.created).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
+
+  const editableFields = [
+    { label: 'Name',         key: 'name',         val: g.name||'' },
+    { label: 'Display Name', key: 'display_name',  val: g.display_name||'' },
+    { label: 'ID',           key: null,            val: g.id, mono: true, readonly: true },
+    { label: 'Created',      key: null,            val: created, readonly: true },
+  ];
+
+  editableFields.forEach(f => {
+    const fieldEl = document.createElement('div');
+    fieldEl.className = 'group-field';
+    const lbl = document.createElement('div');
+    lbl.className = 'group-field-label'; lbl.textContent = f.label;
+    const val = document.createElement('div');
+    val.className = 'group-field-value' + (f.mono?' mono':'');
+    val.textContent = f.val || '—';
+    fieldEl.appendChild(lbl); fieldEl.appendChild(val);
+    if (f.key) {
+      const inp = document.createElement('input');
+      inp.className = 'group-edit-input'; inp.type = 'text';
+      inp.value = f.val; inp.placeholder = f.label;
+      inp.dataset.key = f.key; fieldEl.appendChild(inp);
+    }
+    fieldsDiv.appendChild(fieldEl);
+  });
+
+  // Color field
+  const colorFieldEl = document.createElement('div');
+  colorFieldEl.className = 'group-field';
+  const colorLbl = document.createElement('div');
+  colorLbl.className = 'group-field-label'; colorLbl.textContent = 'Color';
+  const colorVal = document.createElement('div');
+  colorVal.className = 'group-field-value group-color-val';
+  colorVal.innerHTML = g.color ? `<span class="color-dot" style="background:#${g.color}"></span>#${g.color}` : '—';
+
+  // Color edit controls
+  const colorEdit = document.createElement('div');
+  colorEdit.className = 'group-color-edit';
+  const colorPickerWrap = document.createElement('div');
+  colorPickerWrap.className = 'group-color-picker-wrap';
+  const colorSwatch = document.createElement('div');
+  colorSwatch.className = 'group-color-swatch';
+  colorSwatch.style.background = g.color ? `#${g.color}` : '#888';
+  const colorNative = document.createElement('input');
+  colorNative.className = 'group-color-native'; colorNative.type = 'color';
+  colorNative.value = g.color ? `#${g.color}` : '#e8457a';
+  colorPickerWrap.appendChild(colorSwatch); colorPickerWrap.appendChild(colorNative);
+  const colorHex = document.createElement('input');
+  colorHex.className = 'group-color-hex'; colorHex.type = 'text';
+  colorHex.placeholder = '#rrggbb'; colorHex.maxLength = 7;
+  colorHex.value = g.color ? `#${g.color}` : '';
+  const colorClear = document.createElement('button');
+  colorClear.className = 'group-color-clear'; colorClear.textContent = 'Clear';
+  colorEdit.appendChild(colorPickerWrap); colorEdit.appendChild(colorHex); colorEdit.appendChild(colorClear);
+
+  // Sync color controls
+  function syncColor(hex) {
+    const clean = hex.replace('#','');
+    const valid = /^[0-9a-fA-F]{6}$/.test(clean);
+    colorSwatch.style.background = valid ? `#${clean}` : '#888';
+    if (valid) colorNative.value = `#${clean}`;
+    colorHex.value = hex.startsWith('#') ? hex : (hex ? '#'+hex : '');
+  }
+  colorNative.addEventListener('input', e => syncColor(e.target.value));
+  colorHex.addEventListener('input', e => syncColor(e.target.value));
+  colorClear.onclick = () => { colorHex.value = ''; colorSwatch.style.background = '#888'; };
+
+  colorFieldEl.appendChild(colorLbl);
+  colorFieldEl.appendChild(colorVal);
+  colorFieldEl.appendChild(colorEdit);
+  fieldsDiv.appendChild(colorFieldEl);
+
+  // Media section (icon / banner)
+  const mediaSection = document.createElement('div');
+  mediaSection.className = 'group-media-section';
+
+  function makeMediaRow(label, initialUrl, key) {
+    const row = document.createElement('div');
+    row.className = 'group-media-row';
+    const lbl = document.createElement('div');
+    lbl.className = 'group-media-label'; lbl.textContent = label;
+    const inp = document.createElement('input');
+    inp.className = 'group-media-input'; inp.type = 'url';
+    inp.placeholder = 'https://…'; inp.value = initialUrl || '';
+    inp.dataset.key = key;
+    const prev = document.createElement('img');
+    prev.className = 'group-media-preview';
+    if (initialUrl) { prev.src = initialUrl; prev.classList.add('visible'); }
+    inp.oninput = () => {
+      const u = inp.value.trim();
+      if (u) { prev.src = u; prev.classList.add('visible'); }
+      else prev.classList.remove('visible');
+    };
+    const uploadBtn = makeUploadBtn(inp, prev, label === 'Icon');
+    row.appendChild(lbl); row.appendChild(inp); row.appendChild(uploadBtn); row.appendChild(prev);
+    return { row, inp };
+  }
+
+  const { row: iconRow, inp: iconInput } = makeMediaRow('Icon', g.icon, 'icon');
+  const { row: bannerRow, inp: bannerInput } = makeMediaRow('Banner', g.banner, 'banner');
+  mediaSection.appendChild(iconRow); mediaSection.appendChild(bannerRow);
+
+  // Bio
+  const bioWrap = document.createElement('div');
+  const bioLbl = document.createElement('div');
+  bioLbl.className = 'group-bio-label'; bioLbl.textContent = 'Description';
+  const bioView = document.createElement('div');
+  bioView.className = g.description ? 'group-bio' : 'group-bio-empty';
+  if (g.description) bioView.innerHTML = renderMarkdown(g.description);
+  else bioView.textContent = 'No description set.';
+  const bioEdit = document.createElement('textarea');
+  bioEdit.className = 'group-bio-edit';
+  bioEdit.value = g.description || '';
+  bioEdit.rows = 3;
+  bioEdit.placeholder = 'Group description (supports markdown)…';
+  bioWrap.appendChild(bioLbl); bioWrap.appendChild(bioView); bioWrap.appendChild(bioEdit);
+
+  // Members section
+  const membersSection = document.createElement('div');
+  membersSection.className = 'group-members-section';
+  const membersHeader = document.createElement('div');
+  membersHeader.className = 'group-members-header';
+  const membersTitle = document.createElement('div');
+  membersTitle.className = 'group-members-title';
+  membersTitle.textContent = `Members (${(g.members||[]).length})`;
+  membersHeader.appendChild(membersTitle);
+  membersSection.appendChild(membersHeader);
+
+  // View: chips
+  const chipsList = document.createElement('div');
+  chipsList.className = 'group-members-list';
+  renderMemberChips(chipsList, g.members || []);
+  membersSection.appendChild(chipsList);
+
+  // Edit: checklist
+  const checklist = document.createElement('div');
+  checklist.className = 'group-member-checklist';
+  buildChecklist(checklist, g.members || []);
+  membersSection.appendChild(checklist);
+
+  // Edit actions
+  const editActions = document.createElement('div');
+  editActions.className = 'group-edit-actions';
+  const saveStatus = document.createElement('span');
+  saveStatus.className = 'group-save-status'; saveStatus.textContent = '✓ Saved';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-cancel-group'; cancelBtn.textContent = 'Cancel';
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn-delete-group'; deleteBtn.textContent = 'Delete';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn-save-group'; saveBtn.textContent = 'Save';
+  editActions.appendChild(saveStatus); editActions.appendChild(deleteBtn);
+  editActions.appendChild(cancelBtn); editActions.appendChild(saveBtn);
+
+  inner.appendChild(fieldsDiv);
+  inner.appendChild(mediaSection);
+  inner.appendChild(bioWrap);
+  inner.appendChild(membersSection);
+  inner.appendChild(editActions);
+  expandPanel.appendChild(inner);
+
+  // ── Open/close ──
+  function openPanel() { expandPanel.classList.add('open'); expandBtn.classList.add('open'); }
+  function closePanel() { expandPanel.classList.remove('open'); expandBtn.classList.remove('open'); leaveEdit(false); }
+
+  main.style.cursor = 'pointer';
+  main.onclick = e => { if (e.target.closest('button')) return; expandPanel.classList.contains('open') ? closePanel() : openPanel(); };
+  expandBtn.onclick = () => expandPanel.classList.contains('open') ? closePanel() : openPanel();
+
+  // ── Edit mode ──
+  let editing = false;
+
+  function enterEdit() {
+    editing = true;
+    editBtn.textContent = '✕';
+    editBtn.classList.add('editing');
+    fieldsDiv.classList.add('edit-mode');
+    bioWrap.classList.add('edit-mode-bio');
+    editActions.classList.add('visible');
+    mediaSection.classList.add('visible');
+    checklist.classList.add('visible');
+    chipsList.style.display = 'none';
+    openPanel();
+  }
+
+  function leaveEdit(restoreValues = true) {
+    if (!editing) return;
+    editing = false;
+    editBtn.textContent = 'Edit';
+    editBtn.classList.remove('editing');
+    fieldsDiv.classList.remove('edit-mode');
+    bioWrap.classList.remove('edit-mode-bio');
+    editActions.classList.remove('visible');
+    saveStatus.classList.remove('visible');
+    mediaSection.classList.remove('visible');
+    checklist.classList.remove('visible');
+    chipsList.style.display = '';
+    if (restoreValues) {
+      fieldsDiv.querySelectorAll('.group-edit-input').forEach(inp => { inp.value = g[inp.dataset.key] || ''; });
+      bioEdit.value = g.description || '';
+      iconInput.value = g.icon || '';
+      bannerInput.value = g.banner || '';
+      syncColor(g.color ? `#${g.color}` : '');
+      buildChecklist(checklist, g.members || []);
+    }
+  }
+
+  editBtn.onclick = () => editing ? leaveEdit(true) : enterEdit();
+  cancelBtn.onclick = () => leaveEdit(true);
+
+  saveBtn.onclick = async () => {
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+    const patch = {};
+    fieldsDiv.querySelectorAll('.group-edit-input').forEach(inp => {
+      patch[inp.dataset.key] = inp.value.trim() || null;
+    });
+    patch.description = bioEdit.value.trim() || null;
+    patch.icon        = iconInput.value.trim() || null;
+    patch.banner      = bannerInput.value.trim() || null;
+    const rawColor = colorHex.value.replace('#','').trim();
+    patch.color = /^[0-9a-fA-F]{6}$/.test(rawColor) ? rawColor : null;
+    patch.members = [...checklist.querySelectorAll('.checklist-item.checked')].map(el => el.dataset.id);
+
+    try {
+      const r = await fetch(`${API}/groups/${g.id}`, {
+        method: 'PATCH',
+        headers: { Authorization: token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const updated = await r.json();
+      // Also update members
+      await fetch(`${API}/groups/${g.id}/members/overwrite`, {
+        method: 'PUT',
+        headers: { Authorization: token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch.members)
+      });
+      Object.assign(g, updated);
+      g.members = patch.members;
+
+      // Refresh UI
+      nameEl.textContent = g.display_name || g.name;
+      if (g.color) nameEl.style.color = `#${g.color}`; else nameEl.style.color = '';
+      meta.textContent = `${g.members.length} member${g.members.length!==1?'s':''}  ·  ${esc(g.id)}`;
+      colorVal.innerHTML = g.color ? `<span class="color-dot" style="background:#${g.color}"></span>#${g.color}` : '—';
+      applyCardBanner(card, g.banner, g.color);
+      if (g.icon) { iconEl.innerHTML = `<img src="${esc(g.icon)}" alt="" style="width:100%;height:100%;object-fit:cover" />`; }
+      else { iconEl.textContent = initial(g.name); }
+      if (g.description) { bioView.className = 'group-bio'; bioView.innerHTML = renderMarkdown(g.description); }
+      else { bioView.className = 'group-bio-empty'; bioView.textContent = 'No description set.'; }
+      membersTitle.textContent = `Members (${g.members.length})`;
+      renderMemberChips(chipsList, g.members);
+
+      saveStatus.classList.add('visible');
+      setTimeout(() => saveStatus.classList.remove('visible'), 2500);
+      leaveEdit(false);
+    } catch (err) {
+      saveBtn.textContent = 'Error — retry';
+      saveBtn.style.background = '#ed4245';
+      setTimeout(() => { saveBtn.textContent = 'Save'; saveBtn.style.background = ''; saveBtn.disabled = false; }, 2000);
+      return;
+    }
+    saveBtn.textContent = 'Save'; saveBtn.disabled = false;
+  };
+
+  deleteBtn.onclick = async () => {
+    if (!confirm(`Delete the group "${g.display_name || g.name}"? This cannot be undone.`)) return;
+    deleteBtn.disabled = true; deleteBtn.textContent = 'Deleting…';
+    try {
+      const r = await fetch(`${API}/groups/${g.id}`, { method: 'DELETE', headers: { Authorization: token } });
+      if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`);
+      allGroups = allGroups.filter(x => x.id !== g.id);
+      filteredGroups = filteredGroups.filter(x => x.id !== g.id);
+      renderPage(currentPage > Math.ceil(filteredGroups.length / PER_PAGE) ? currentPage - 1 : currentPage);
+    } catch {
+      deleteBtn.textContent = 'Error';
+      setTimeout(() => { deleteBtn.textContent = 'Delete'; deleteBtn.disabled = false; }, 2000);
+    }
+  };
+
+  card.appendChild(main);
+  card.appendChild(expandPanel);
+  return card;
+}
+
+function renderMemberChips(container, memberIds) {
+  container.innerHTML = '';
+  if (!memberIds.length) {
+    const e = document.createElement('div');
+    e.className = 'group-members-empty'; e.textContent = 'No members in this group.';
+    container.appendChild(e); return;
+  }
+  memberIds.forEach(id => {
+    const m = memberMap[id];
+    const chip = document.createElement('div');
+    chip.className = 'group-member-chip';
+    const avWrap = document.createElement('div');
+    avWrap.className = 'chip-av';
+    avWrap.style.background = m?.color ? `#${m.color}` : randColor(id);
+    if (m?.avatar_url) {
+      const img = document.createElement('img');
+      img.src = m.avatar_url; img.alt = '';
+      img.onerror = () => { img.remove(); avWrap.textContent = initial(m?.display_name || m?.name || id); };
+      avWrap.appendChild(img);
+    } else { avWrap.textContent = initial(m?.display_name || m?.name || id); }
+    chip.appendChild(avWrap);
+    chip.appendChild(document.createTextNode(m ? (m.display_name || m.name) : id));
+    container.appendChild(chip);
+  });
+}
+
+function buildChecklist(container, selectedIds) {
+  container.innerHTML = '';
+  const sorted = Object.values(memberMap).sort((a,b) => (a.display_name||a.name||'').localeCompare(b.display_name||b.name||''));
+  sorted.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'checklist-item' + (selectedIds.includes(m.id) ? ' checked' : '');
+    item.dataset.id = m.id;
+    const box = document.createElement('div'); box.className = 'checklist-box';
+    const av = document.createElement('div');
+    av.className = 'chip-av';
+    av.style.cssText = `width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;overflow:hidden;background:${m.color?`#${m.color}`:randColor(m.id)}`;
+    if (m.avatar_url) {
+      const img = document.createElement('img');
+      img.src = m.avatar_url; img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+      img.onerror = () => { img.remove(); av.textContent = initial(m.display_name||m.name); };
+      av.appendChild(img);
+    } else { av.textContent = initial(m.display_name||m.name); }
+    const nameEl = document.createElement('div'); nameEl.className = 'checklist-name';
+    nameEl.textContent = m.display_name || m.name;
+    item.appendChild(box); item.appendChild(av); item.appendChild(nameEl);
+    if (m.pronouns) { const p = document.createElement('div'); p.className = 'checklist-pronouns'; p.textContent = m.pronouns; item.appendChild(p); }
+    item.onclick = () => item.classList.toggle('checked');
+    container.appendChild(item);
+  });
+}
+
+// ── New group panel ───────────────────────────────────────
+function toggleNewGroup() {
+  document.getElementById('new-group-box').classList.toggle('open');
+}
+
+// New group color sync
+const ngNative = document.getElementById('ng-color-native');
+const ngHex    = document.getElementById('ng-color-hex');
+const ngSwatch = document.getElementById('ng-color-swatch');
+
+function syncNewGroupColor(hex) {
+  const clean = hex.replace('#','');
+  const valid = /^[0-9a-fA-F]{6}$/.test(clean);
+  ngSwatch.style.background = valid ? `#${clean}` : '#888';
+  if (valid) ngNative.value = `#${clean}`;
+  ngHex.value = hex.startsWith('#') ? hex : (hex ? '#'+hex : '');
+}
+function clearNewGroupColor() { ngHex.value = ''; ngSwatch.style.background = '#888'; }
+ngNative.addEventListener('input', e => syncNewGroupColor(e.target.value));
+ngHex.addEventListener('input', e => syncNewGroupColor(e.target.value));
+
+async function createGroup() {
+  const name = document.getElementById('ng-name').value.trim();
+  if (!name) { document.getElementById('ng-name').focus(); return; }
+  const btn = document.getElementById('ng-create-btn');
+  const status = document.getElementById('ng-status');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  status.classList.remove('visible','error');
+
+  const rawColor = ngHex.value.replace('#','').trim();
+  const body = {
+    name,
+    display_name: document.getElementById('ng-display-name').value.trim() || null,
+    description:  document.getElementById('ng-description').value.trim() || null,
+    icon:         document.getElementById('ng-icon').value.trim() || null,
+    color:        /^[0-9a-fA-F]{6}$/.test(rawColor) ? rawColor : null,
+  };
+
+  try {
+    const r = await fetch(`${API}/groups`, {
+      method: 'POST',
+      headers: { Authorization: token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const created = await r.json();
+    created.members = [];
+    allGroups.unshift(created);
+    filteredGroups = searchQuery ? filteredGroups : allGroups;
+
+    // Reset form
+    ['ng-name','ng-display-name','ng-description','ng-icon'].forEach(id => { document.getElementById(id).value = ''; });
+    clearNewGroupColor();
+    document.getElementById('new-group-box').classList.remove('open');
+
+    status.textContent = `✓ "${created.display_name || created.name}" created`;
+    status.classList.add('visible');
+    setTimeout(() => status.classList.remove('visible'), 3000);
+
+    renderPage(1);
+  } catch (err) {
+    status.textContent = 'Failed — please retry';
+    status.classList.add('visible','error');
+    setTimeout(() => status.classList.remove('visible','error'), 3000);
+  }
+  btn.textContent = 'Create Group'; btn.disabled = false;
+}
+
+// ── API + boot ────────────────────────────────────────────
+async function apiFetch(path) {
+  const r = await fetch(API + path, { headers: { Authorization: token } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+function renderFronterCard(fronters) {
+  const list = Array.isArray(fronters) ? fronters : (fronters ? [fronters] : []);
+  const card = document.getElementById('fronter-card');
+  let idx = 0;
+
+  function draw() {
+    card.innerHTML = '<div class="info-card-label">Currently Fronting</div>';
+    card.style.removeProperty('--banner-url');
+    card.style.removeProperty('--color-tint');
+    card.classList.remove('has-banner');
+
+    if (!list.length) {
+      const emptyAv = document.createElement('div');
+      emptyAv.style.cssText = 'width:56px;height:56px;border-radius:50%;background:var(--bg-tertiary);border:1px dashed var(--border);flex-shrink:0';
+      card.appendChild(emptyAv);
+      const emptyText = document.createElement('div');
+      emptyText.className = 'info-text';
+      emptyText.innerHTML = '<div class="info-name" style="color:var(--text-muted);font-style:italic;font-weight:400">No fronter registered</div>';
+      card.appendChild(emptyText);
+      return;
+    }
+
+    const fronter = list[idx];
+    applyCardBanner(card, fronter.banner, fronter.color);
+    const av = makeAvatar(fronter.avatar_url, fronter.display_name || fronter.name, 56);
+    if (fronter.color) av.style.background = '#' + fronter.color;
+    card.appendChild(av);
+
+    const text = document.createElement('div');
+    text.className = 'info-text';
+    text.innerHTML = `
+      <div class="info-name-row">
+        <div class="info-name">${esc(fronter.display_name || fronter.name)}</div>
+        ${fronter.pronouns ? '<div class="info-pronouns">' + esc(fronter.pronouns) + '</div>' : ''}
+      </div>
+      <div class="info-id">${esc(fronter.id || '')}</div>
+    `;
+    card.appendChild(text);
+
+    if (list.length > 1) {
+      const prevNav = document.createElement('div');
+      prevNav.className = 'fronter-nav prev';
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'fronter-arrow';
+      prevBtn.innerHTML = '&#8249;';
+      prevBtn.title = 'Previous fronter';
+      prevBtn.onclick = e => { e.stopPropagation(); idx = (idx - 1 + list.length) % list.length; draw(); };
+      prevNav.appendChild(prevBtn);
+      card.appendChild(prevNav);
+
+      const nextNav = document.createElement('div');
+      nextNav.className = 'fronter-nav next';
+      const pipWrap = document.createElement('div');
+      pipWrap.className = 'fronter-pip-wrap';
+      list.forEach((_, i) => {
+        const pip = document.createElement('div');
+        pip.className = 'fronter-pip' + (i === idx ? ' active' : '');
+        pipWrap.appendChild(pip);
+      });
+      nextNav.appendChild(pipWrap);
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'fronter-arrow';
+      nextBtn.innerHTML = '&#8250;';
+      nextBtn.title = 'Next fronter';
+      nextBtn.onclick = e => { e.stopPropagation(); idx = (idx + 1) % list.length; draw(); };
+      nextNav.appendChild(nextBtn);
+      card.appendChild(nextNav);
+    }
+  }
+
+  draw();
+}
+
+async function boot() {
+  // Render top cards from cache
+  const cached = _loadCache();
+  if (cached) {
+    if (cached.system) renderSystemCard(cached.system);
+    if (cached.fronter !== undefined) renderFronterCard(cached.fronter);
+    if (cached.members) cached.members.forEach(m => { memberMap[m.id] = m; });
+  }
+
+  try {
+    const [system, membersRaw, groupsRaw, switches] = await Promise.all([
+      apiFetch('/systems/@me'),
+      apiFetch('/systems/@me/members'),
+      apiFetch('/systems/@me/groups?with_members=true'),
+      apiFetch('/systems/@me/switches?limit=1'),
+    ]);
+
+    // Build member map
+    memberMap = {};
+    membersRaw.forEach(m => { memberMap[m.id] = m; });
+    allMembers = membersRaw;
+
+    // Fronter
+    let fronter = null;
+    if (switches?.length && switches[0].members?.length) {
+      const fronterIds = switches[0].members.map(x => typeof x === 'string' ? x : x.id);
+      const fronterList = fronterIds.map(id => memberMap[id]).filter(Boolean);
+      fronter = fronterList.length > 0 ? fronterList : null;
+    }
+
+    // Update cache
+    const prev = _loadCache();
+    _saveCache({ system, members: membersRaw, fronter: fronter || prev?.fronter || null });
+
+    renderSystemCard(system);
+    renderFronterCard(fronter);
+
+    allGroups = groupsRaw;
+    filteredGroups = allGroups;
+    renderPage(1);
+
+  } catch (e) {
+    console.error('Boot error:', e);
+    if (e.message?.includes('401') || e.message?.includes('403')) {
+      sessionStorage.removeItem('pk_token');
+      window.location.href = 'index.html';
+    }
+    document.getElementById('groups-grid').innerHTML = '';
+    const empty = document.getElementById('groups-empty');
+    empty.style.display = 'block';
+    empty.querySelector('.empty-icon').textContent = '⚠️';
+    empty.querySelector('div:last-child') || (empty.innerHTML += '<div>Failed to load groups.</div>');
+  }
+}
+
+function logout() { sessionStorage.removeItem('pk_token'); window.location.href = 'index.html'; }
+
+boot();
+</script>
+</body>
+</html>
