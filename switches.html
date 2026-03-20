@@ -1209,10 +1209,25 @@ async function fetchSwitches(before = null) {
 }
 
 // ── Boot ──────────────────────────────────────────────────
+
 function renderFronterCard(fronters) {
   const list = Array.isArray(fronters) ? fronters : (fronters ? [fronters] : []);
   const card = document.getElementById('fronter-card');
   let idx = 0;
+
+  function _av(url, name, color) {
+    const COLORS = ['#6b6f76','#eb459e','#57f287','#fee75c','#ed4245','#1b9adf','#f47fff','#ff944d'];
+    function _rc(s) { let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))&0xffffffff; return COLORS[Math.abs(h)%COLORS.length]; }
+    const el = document.createElement('div');
+    el.style.cssText = 'width:56px;height:56px;font-size:21px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:' + (color ? '#'+color : _rc(name||'?'));
+    if (url) {
+      const img = document.createElement('img');
+      img.src = url; img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+      img.onerror = () => { img.remove(); el.textContent = (name||'?').charAt(0).toUpperCase(); };
+      el.appendChild(img);
+    } else { el.textContent = (name||'?').charAt(0).toUpperCase(); }
+    return el;
+  }
 
   function draw() {
     card.innerHTML = '<div class="info-card-label">Currently Fronting</div>';
@@ -1233,9 +1248,7 @@ function renderFronterCard(fronters) {
 
     const fronter = list[idx];
     applyCardBanner(card, fronter.banner, fronter.color);
-    const av = makeAvatar(fronter.avatar_url, fronter.display_name || fronter.name, 56);
-    if (fronter.color) av.style.background = '#' + fronter.color;
-    card.appendChild(av);
+    card.appendChild(_av(fronter.avatar_url, fronter.display_name || fronter.name, fronter.color));
 
     const text = document.createElement('div');
     text.className = 'info-text';
