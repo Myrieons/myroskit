@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MYROSKIT — Headspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: rgba(28, 29, 32, 0.65);
+    --bg-tertiary: rgba(33, 34, 38, 0.6);
+    --bg-hover: rgba(38, 39, 44, 0.75);
+    --accent: #6b6f76;
+    --accent-hover: #55585e;
+    --accent-rgb: 107, 111, 118;
+    --text-primary: #f2f3f5;
+    --text-secondary: #b5bac1;
+    --text-muted: #80848e;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --radius: 12px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+  .page { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+
+  .topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .wordmark .myros { color: var(--text-primary); }
+  .wordmark .kit   { color: var(--accent); }
+  .btn-logout { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-muted); font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; cursor: pointer; transition: color 0.1s, border-color 0.1s; }
+  .btn-logout:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .info-card { position: relative; background: var(--bg-secondary); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 14px; min-width: 0; overflow: hidden; isolation: isolate; }
+  .info-card::before { content: ''; position: absolute; inset: 0; background-image: var(--banner-url, none); background-size: cover; background-position: center; filter: blur(8px) brightness(0.35); transform: scale(1.08); z-index: 0; opacity: 0; transition: opacity 0.3s ease; }
+  .info-card.has-banner::before { opacity: 1; }
+  .info-card::after { content: ''; position: absolute; inset: 0; background: var(--color-tint, transparent); opacity: 0.18; z-index: 0; pointer-events: none; }
+  .info-card > * { position: relative; z-index: 1; }
+  .info-card-label { position: absolute; top: 10px; right: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); opacity: 0.6; z-index: 1; }
+  .info-text { min-width: 0; flex: 1; }
+  .info-name-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .info-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .info-pronouns { font-size: 12px; color: var(--text-secondary); opacity: 0.45; white-space: nowrap; flex-shrink: 0; }
+  .info-id { font-size: 11px; color: var(--text-muted); font-family: 'Courier New', monospace; margin-top: 3px; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--bg-tertiary); border: 2px solid var(--border); }
+  .avatar-initials { width: 56px; height: 56px; border-radius: 50%; background: var(--bg-tertiary); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
+  .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  .nav-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .nav-tab { background: rgba(49,51,56,0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; user-select: none; transition: background 0.1s, color 0.1s, border-color 0.1s; flex: 1; text-align: center; white-space: nowrap; text-decoration: none; display: block; }
+  .nav-tab.active { background: #1e1f22; border-color: rgba(255,255,255,0.14); color: var(--text-primary); }
+  .nav-tab:hover:not(.active) { background: var(--bg-hover); color: var(--text-primary); }
+
+  /* content */
+  .content-box { background: var(--bg-secondary); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 12px; border-bottom: 1px solid var(--border-subtle); }
+  .section-title-wrap { display: flex; align-items: center; gap: 8px; }
+  .section-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .section-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  /* inner tabs */
+  .iw-tabs { display: flex; padding: 0 16px; border-bottom: 1px solid var(--border-subtle); gap: 0; }
+  .iw-tab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-family: inherit; font-size: 13px; font-weight: 600; padding: 12px 16px; cursor: pointer; transition: color 0.1s, border-color 0.1s; white-space: nowrap; }
+  .iw-tab.active { color: var(--text-primary); border-bottom-color: var(--text-secondary); }
+  .iw-tab:hover:not(.active) { color: var(--text-secondary); }
+  .iw-panel { display: none; }
+  .iw-panel.active { display: block; }
+
+  /* grid layout for cards */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; padding: 16px; }
+
+  /* location cards */
+  .location-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; transition: border-color 0.15s; }
+  .location-card:hover { border-color: rgba(255,255,255,0.14); }
+  .location-main { display: flex; align-items: center; gap: 10px; padding: 12px; cursor: pointer; }
+  .location-icon { font-size: 20px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); border-radius: 8px; flex-shrink: 0; }
+  .location-info { flex: 1; min-width: 0; }
+  .location-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .location-desc-short { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .location-pips { display: flex; flex-shrink: 0; }
+  .loc-pip { width: 20px; height: 20px; border-radius: 50%; background: var(--bg-tertiary); border: 1px solid var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--text-muted); margin-left: -4px; overflow: hidden; }
+  .loc-pip:first-child { margin-left: 0; }
+  .loc-pip img { width: 100%; height: 100%; object-fit: cover; }
+  .loc-pip-count { font-size: 11px; color: var(--text-muted); margin-left: 6px; flex-shrink: 0; align-self: center; }
+  .location-expand { display: none; padding: 0 12px 12px; }
+  .location-card.expanded .location-expand { display: block; }
+  .loc-expand-body { font-size: 12px; color: var(--text-secondary); line-height: 1.55; padding: 10px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+  .loc-expand-members { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .member-chip { display: flex; align-items: center; gap: 5px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 99px; padding: 3px 8px 3px 4px; font-size: 11px; color: var(--text-secondary); }
+  .chip-av { width: 16px; height: 16px; border-radius: 50%; overflow: hidden; background: var(--bg-tertiary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; }
+  .chip-av img { width: 100%; height: 100%; object-fit: cover; }
+  .loc-edit-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.1s, background 0.1s; display: flex; align-items: center; flex-shrink: 0; }
+  .loc-edit-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+
+  /* hs / role cards */
+  .hs-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; animation: fadeUp 0.2s ease both; transition: border-color 0.15s; }
+  .hs-card:hover { border-color: rgba(255,255,255,0.12); }
+  .hs-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .hs-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .hs-title { font-size: 13px; font-weight: 700; color: var(--text-primary); flex: 1; }
+  .hs-cat { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); white-space: nowrap; }
+  .hs-edit-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 3px; border-radius: 4px; transition: color 0.1s, background 0.1s; display: flex; align-items: center; }
+  .hs-edit-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .hs-body { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+  .hs-linked { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .hs-linked-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-right: 2px; }
+  .hs-chip { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 99px; padding: 2px 8px 2px 4px; font-size: 10px; color: var(--text-muted); }
+  .hs-chip-av { width: 14px; height: 14px; border-radius: 50%; overflow: hidden; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; }
+  .hs-chip-av img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* add button */
+  .add-row { padding: 0 16px 16px; }
+  .iw-add-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed rgba(255,255,255,0.1); border-radius: var(--radius-sm); color: var(--text-muted); font-family: inherit; font-size: 12px; font-weight: 600; padding: 9px 14px; cursor: pointer; width: 100%; transition: border-color 0.1s, color 0.1s, background 0.1s; }
+  .iw-add-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text-secondary); background: rgba(255,255,255,0.02); }
+
+  .entries-empty { padding: 48px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+  .entries-empty .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.45; }
+
+  /* modals */
+  .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: #1e1f22; border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; width: 100%; max-width: 440px; animation: slideUp 0.2s ease; max-height: 90vh; overflow-y: auto; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-title { font-size: 14px; font-weight: 700; margin-bottom: 18px; color: var(--text-primary); }
+  .modal-field { margin-bottom: 14px; }
+  .modal-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px; }
+  .modal-input, .modal-select, .modal-textarea { width: 100%; background: rgba(15,15,17,0.6); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-family: inherit; padding: 8px 10px; font-size: 13px; outline: none; transition: border-color 0.15s; }
+  .modal-input:focus, .modal-select:focus, .modal-textarea:focus { border-color: rgba(255,255,255,0.2); }
+  .modal-input::placeholder, .modal-textarea::placeholder { color: var(--text-muted); }
+  .modal-textarea { resize: vertical; min-height: 64px; }
+  .modal-select { appearance: none; cursor: pointer; }
+  .modal-emoji-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .modal-emoji-btn { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-tertiary); font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.1s, background 0.1s; line-height: 1; }
+  .modal-emoji-btn.selected { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08); }
+  .modal-emoji-btn:hover:not(.selected) { background: var(--bg-hover); }
+  .modal-member-list { max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(15,15,17,0.4); }
+  .modal-member-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); transition: background 0.1s; }
+  .modal-member-item:last-child { border-bottom: none; }
+  .modal-member-item:hover { background: rgba(255,255,255,0.03); }
+  .modal-member-item.checked { background: rgba(107,111,118,0.08); }
+  .mmi-check { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: transparent; transition: background 0.1s, border-color 0.1s; }
+  .modal-member-item.checked .mmi-check { background: var(--accent); border-color: var(--accent); }
+  .modal-member-item.checked .mmi-check::after { content: ''; width: 8px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(0px, -1px); display: block; }
+  .mmi-av { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; background: var(--bg-tertiary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .mmi-av img { width: 100%; height: 100%; object-fit: cover; }
+  .mmi-name { font-size: 12px; color: var(--text-secondary); }
+  .modal-color-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .modal-color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s, border-color 0.1s; }
+  .modal-color-swatch:hover { transform: scale(1.15); }
+  .modal-color-swatch.selected { border-color: #fff; transform: scale(1.1); }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .btn-modal-cancel { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-muted); font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; transition: color 0.1s, border-color 0.1s; }
+  .btn-modal-cancel:hover { color: var(--text-primary); border-color: var(--text-muted); }
+  .btn-modal-save { background: var(--accent); border: none; border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 20px; cursor: pointer; transition: background 0.15s; }
+  .btn-modal-save:hover { background: var(--accent-hover); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
+  @media (max-width: 620px) {
+    .info-row { grid-template-columns: 1fr; }
+    .nav-tabs { flex-wrap: wrap; }
+    .nav-tab { flex: none; font-size: 12px; padding: 7px 12px; }
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topline">
+    <div class="wordmark"><span class="myros">MYROS</span><span class="kit">KIT</span></div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <a class="btn-logout" href="https://github.com/Myrieons/MyrosKit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none;padding:5px 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="info-row">
+    <div class="info-card" id="system-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0"><div class="skeleton" style="height:15px;width:120px;margin-bottom:6px"></div><div class="skeleton" style="height:11px;width:80px"></div></div>
+    </div>
+    <div class="info-card" id="fronter-card">
+      <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0"><div class="skeleton" style="height:10px;width:60px;margin-bottom:6px"></div><div class="skeleton" style="height:15px;width:100px;margin-bottom:6px"></div><div class="skeleton" style="height:11px;width:70px"></div></div>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <a class="nav-tab" href="dashboard.html">Members</a>
+    <a class="nav-tab" href="system.html">System</a>
+    <a class="nav-tab" href="switches.html">Switch History</a>
+    <a class="nav-tab" href="groups.html">Group List</a>
+    <a class="nav-tab" href="analytics.html">Analytics</a>
+    <a class="nav-tab" href="journal.html">Journal</a>
+    <a class="nav-tab active" href="headspace.html">Headspace</a>
+    <a class="nav-tab" href="settings.html">Settings</a>
+  </div>
+
+  <div class="content-box">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <div class="section-icon" style="background:rgba(138,123,201,0.12);">🌌</div>
+        <div>
+          <div class="section-title">Innerworld & Headspace</div>
+          <div class="section-subtitle">Locations, notes, roles, and system information</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="iw-tabs">
+      <button class="iw-tab active" onclick="switchTab('locations',this)">🗺️ Locations</button>
+      <button class="iw-tab" onclick="switchTab('headspace',this)">💭 Headspace Notes</button>
+      <button class="iw-tab" onclick="switchTab('roles',this)">🏷️ Roles & Info</button>
+    </div>
+
+    <!-- Locations -->
+    <div class="iw-panel active" id="iw-panel-locations">
+      <div class="cards-grid" id="locations-list"></div>
+      <div class="add-row">
+        <button class="iw-add-btn" onclick="openLocModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add location
+        </button>
+      </div>
+    </div>
+
+    <!-- Headspace notes -->
+    <div class="iw-panel" id="iw-panel-headspace">
+      <div class="cards-grid" id="headspace-list"></div>
+      <div class="add-row">
+        <button class="iw-add-btn" onclick="openHsModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add headspace note
+        </button>
+      </div>
+    </div>
+
+    <!-- Roles & Info -->
+    <div class="iw-panel" id="iw-panel-roles">
+      <div class="cards-grid" id="roles-list"></div>
+      <div class="add-row">
+        <button class="iw-add-btn" onclick="openRoleModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add role / info
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Location modal -->
+<div class="modal-overlay" id="loc-modal" onclick="bgClose(event,'loc-modal')">
+  <div class="modal-box">
+    <div class="modal-title" id="loc-modal-title">Add Location</div>
+    <div class="modal-field"><label class="modal-label">Name</label><input type="text" class="modal-input" id="loc-name" placeholder="e.g. The Forest"></div>
+    <div class="modal-field"><label class="modal-label">Icon</label><div class="modal-emoji-row" id="loc-icon-row"></div></div>
+    <div class="modal-field"><label class="modal-label">Description</label><textarea class="modal-textarea" id="loc-desc" style="min-height:80px;" placeholder="What does this place look like? Feel like?"></textarea></div>
+    <div class="modal-field"><label class="modal-label">Who lives / spends time here</label><div class="modal-member-list" id="loc-members"></div></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" id="loc-del-btn" style="display:none;color:#f38ba8;border-color:rgba(237,66,69,0.3);" onclick="deleteLoc()">Delete</button>
+      <button class="btn-modal-cancel" onclick="closeModal('loc-modal')">Cancel</button>
+      <button class="btn-modal-save" onclick="saveLoc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Headspace modal -->
+<div class="modal-overlay" id="hs-modal" onclick="bgClose(event,'hs-modal')">
+  <div class="modal-box">
+    <div class="modal-title" id="hs-modal-title">Add Headspace Note</div>
+    <div class="modal-field"><label class="modal-label">Title</label><input type="text" class="modal-input" id="hs-title" placeholder="e.g. Anxiety patterns"></div>
+    <div class="modal-field"><label class="modal-label">Category</label>
+      <select class="modal-select" id="hs-cat">
+        <option value="general">General</option>
+        <option value="trigger">Trigger</option>
+        <option value="coping">Coping strategy</option>
+        <option value="pattern">Pattern / observation</option>
+        <option value="boundary">Boundary</option>
+        <option value="reminder">Reminder to self</option>
+        <option value="lore">System lore</option>
+      </select>
+    </div>
+    <div class="modal-field"><label class="modal-label">Color</label><div class="modal-color-row" id="hs-color-row"></div></div>
+    <div class="modal-field"><label class="modal-label">Content</label><textarea class="modal-textarea" id="hs-body" style="min-height:90px;" placeholder="Write the note…"></textarea></div>
+    <div class="modal-field"><label class="modal-label">Link to members (optional)</label><div class="modal-member-list" id="hs-members"></div></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" id="hs-del-btn" style="display:none;color:#f38ba8;border-color:rgba(237,66,69,0.3);" onclick="deleteHs()">Delete</button>
+      <button class="btn-modal-cancel" onclick="closeModal('hs-modal')">Cancel</button>
+      <button class="btn-modal-save" onclick="saveHs()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Role modal -->
+<div class="modal-overlay" id="role-modal" onclick="bgClose(event,'role-modal')">
+  <div class="modal-box">
+    <div class="modal-title" id="role-modal-title">Add Role / Info</div>
+    <div class="modal-field"><label class="modal-label">Title</label><input type="text" class="modal-input" id="role-title" placeholder="e.g. Protectors, Age sliders…"></div>
+    <div class="modal-field"><label class="modal-label">Category</label>
+      <select class="modal-select" id="role-cat">
+        <option value="role">Role</option>
+        <option value="subsystem">Subsystem</option>
+        <option value="relationship">Relationship</option>
+        <option value="rule">System rule</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="modal-field"><label class="modal-label">Color</label><div class="modal-color-row" id="role-color-row"></div></div>
+    <div class="modal-field"><label class="modal-label">Description</label><textarea class="modal-textarea" id="role-body" style="min-height:72px;" placeholder="Describe this role or group info…"></textarea></div>
+    <div class="modal-field"><label class="modal-label">Members</label><div class="modal-member-list" id="role-members"></div></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" id="role-del-btn" style="display:none;color:#f38ba8;border-color:rgba(237,66,69,0.3);" onclick="deleteRole()">Delete</button>
+      <button class="btn-modal-cancel" onclick="closeModal('role-modal')">Cancel</button>
+      <button class="btn-modal-save" onclick="saveRole()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = 'https://api.pluralkit.me/v2';
+const TOKEN = sessionStorage.getItem('pk_token');
+if (!TOKEN) window.location.href = 'index.html';
+
+const LKEY = 'myroskit_locations_v1';
+const HKEY = 'myroskit_hs_v1';
+const RKEY = 'myroskit_roles_v1';
+
+const LOC_ICONS = ['🏡','🌲','🌊','🏔️','🌌','🏜️','🌸','🔥','❄️','🌙','☀️','💧','🌿','🕌','⛩️','🌁','🌃','🏕️','🗺️','✨'];
+const PALETTE   = ['#c97b8a','#7bc98a','#7badc9','#8a7bc9','#c9a07b','#c9c37b','#80848e','#b5bac1'];
+
+let allMembers = [], locations = [], hsNotes = [], roles = [];
+let editLocId = null, editHsId = null, editRoleId = null;
+
+async function boot() {
+  locations = tryParse(LKEY, []);
+  hsNotes   = tryParse(HKEY, []);
+  roles     = tryParse(RKEY, []);
+  renderLocations(); renderHsNotes(); renderRoles();
+  try {
+    const [sys, fronters, members] = await Promise.all([
+      fetch(API+'/systems/@me',         {headers:{Authorization:TOKEN}}).then(r=>r.ok?r.json():null),
+      fetch(API+'/systems/@me/fronters', {headers:{Authorization:TOKEN}}).then(r=>r.ok?r.json():null),
+      fetch(API+'/systems/@me/members',  {headers:{Authorization:TOKEN}}).then(r=>r.ok?r.json():[])
+    ]);
+    if (sys)      renderSysCard(sys);
+    if (fronters) renderFronterCard(fronters.members||[]);
+    allMembers = (members||[]).sort((a,b)=>(a.display_name||a.name||'').localeCompare(b.display_name||b.name||''));
+    renderLocations(); renderHsNotes(); renderRoles();
+  } catch(e){ console.warn(e); }
+}
+
+function renderSysCard(s) {
+  const c = document.getElementById('system-card');
+  if (s.banner) { c.style.setProperty('--banner-url',`url('${s.banner}')`); c.classList.add('has-banner'); }
+  if (s.color)  c.style.setProperty('--color-tint',`#${s.color}`);
+  const av = s.avatar_url ? `<img class="avatar" src="${s.avatar_url}" alt="">` : `<div class="avatar-initials">${esc((s.name||'S').charAt(0))}</div>`;
+  c.innerHTML = `<div class="info-card-label">System</div>${av}<div class="info-text"><div class="info-name-row"><div class="info-name">${esc(s.name||'Unnamed System')}</div>${s.pronouns?`<div class="info-pronouns">${esc(s.pronouns)}</div>`:''}</div><div class="info-id">${esc(s.id||'')}</div></div>`;
+}
+function renderFronterCard(members) {
+  const c = document.getElementById('fronter-card');
+  if (!members.length) { c.innerHTML=`<div class="info-card-label">Fronting</div><div class="avatar-initials" style="opacity:.3">?</div><div class="info-text"><div class="info-name" style="color:var(--text-muted)">Nobody logged</div></div>`; return; }
+  const m = members[0];
+  if (m.banner) { c.style.setProperty('--banner-url',`url('${m.banner}')`); c.classList.add('has-banner'); }
+  if (m.color)  c.style.setProperty('--color-tint',`#${m.color}`);
+  const av = m.avatar_url ? `<img class="avatar" src="${m.avatar_url}" alt="" style="width:48px;height:48px;">` : `<div class="avatar-initials" style="width:48px;height:48px;font-size:16px">${esc((m.display_name||m.name||'?').charAt(0))}</div>`;
+  c.innerHTML = `<div class="info-card-label">Fronting</div>${av}<div class="info-text"><div class="info-name-row"><div class="info-name">${esc(m.display_name||m.name||'Unknown')}</div>${m.pronouns?`<div class="info-pronouns">${esc(m.pronouns)}</div>`:''}</div><div class="info-id">${esc(m.id||'')}</div></div>`;
+}
+
+/* ── Tabs ── */
+function switchTab(tab, el) {
+  document.querySelectorAll('.iw-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.iw-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('iw-panel-'+tab).classList.add('active');
+}
+
+/* ── Locations ── */
+function tryParse(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d));}catch{return d;}}
+function saveLocs(){localStorage.setItem(LKEY,JSON.stringify(locations));}
+function saveHsData(){localStorage.setItem(HKEY,JSON.stringify(hsNotes));}
+function saveRolesData(){localStorage.setItem(RKEY,JSON.stringify(roles));}
+
+function renderLocations() {
+  const list = document.getElementById('locations-list');
+  if (!locations.length) {
+    list.innerHTML = `<div class="entries-empty" style="grid-column:1/-1"><div class="empty-icon">🗺️</div><div>No locations yet.</div><div style="font-size:12px;margin-top:4px;">Add places from your innerworld!</div></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  locations.forEach((loc,i) => {
+    const pips = loc.memberIds.slice(0,4).map(mid=>{
+      const m=allMembers.find(x=>x.id===mid); if(!m)return'';
+      const bg=m.color?`background:#${m.color}44;`:'';
+      return m.avatar_url?`<div class="loc-pip"><img src="${m.avatar_url}" alt=""></div>`:`<div class="loc-pip" style="${bg}">${esc((m.display_name||m.name||'?').charAt(0))}</div>`;
+    }).join('');
+    const extra = loc.memberIds.length>4?`<span class="loc-pip-count">+${loc.memberIds.length-4}</span>`:'';
+    const expandMembers = loc.memberIds.map(mid=>{
+      const m=allMembers.find(x=>x.id===mid); if(!m)return'';
+      const nm=m.display_name||m.name||'?'; const bg=m.color?`background:#${m.color}44;`:'';
+      const av=m.avatar_url?`<div class="chip-av"><img src="${m.avatar_url}"></div>`:`<div class="chip-av" style="${bg}">${esc(nm.charAt(0))}</div>`;
+      return`<div class="member-chip">${av}${esc(nm)}</div>`;
+    }).join('');
+    const card=document.createElement('div'); card.className='location-card'; card.style.animationDelay=`${i*0.04}s`;
+    card.innerHTML=`
+      <div class="location-main" onclick="this.parentElement.classList.toggle('expanded')">
+        <div class="location-icon">${loc.icon||'🏡'}</div>
+        <div class="location-info">
+          <div class="location-name">${esc(loc.name)}</div>
+          <div class="location-desc-short">${esc(loc.desc||'No description')}</div>
+        </div>
+        <div class="location-pips">${pips}${extra}</div>
+        <button class="loc-edit-btn" onclick="event.stopPropagation();openLocModal('${loc.id}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+      <div class="location-expand">
+        <div class="loc-expand-body">${esc(loc.desc||'No description added yet.')}</div>
+        ${loc.memberIds.length?`<div class="loc-expand-members">${expandMembers}</div>`:''}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function openLocModal(locId) {
+  editLocId=locId||null; const isEdit=!!locId; const loc=isEdit?locations.find(l=>l.id===locId):null;
+  document.getElementById('loc-modal-title').textContent=isEdit?'Edit Location':'Add Location';
+  document.getElementById('loc-name').value=isEdit?loc.name:'';
+  document.getElementById('loc-desc').value=isEdit?(loc.desc||''):'';
+  document.getElementById('loc-del-btn').style.display=isEdit?'':'none';
+  const ir=document.getElementById('loc-icon-row'); ir.innerHTML='';
+  LOC_ICONS.forEach(icon=>{
+    const b=document.createElement('button');b.type='button';
+    b.className='modal-emoji-btn'+(icon===(loc?.icon||'🏡')?' selected':'');
+    b.textContent=icon; b.onclick=()=>{ir.querySelectorAll('.modal-emoji-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');};
+    ir.appendChild(b);
+  });
+  buildMemberList('loc-members',loc?.memberIds||[]);
+  openModal('loc-modal');
+}
+function saveLoc() {
+  const name=document.getElementById('loc-name').value.trim(); if(!name){document.getElementById('loc-name').focus();return;}
+  const icon=document.querySelector('#loc-icon-row .modal-emoji-btn.selected')?.textContent||'🏡';
+  const desc=document.getElementById('loc-desc').value.trim();
+  const memberIds=getChecked('loc-members');
+  if(editLocId){const l=locations.find(x=>x.id===editLocId);if(l)Object.assign(l,{name,icon,desc,memberIds});}
+  else locations.push({id:'l_'+Date.now(),name,icon,desc,memberIds});
+  saveLocs(); closeModal('loc-modal'); renderLocations();
+}
+function deleteLoc(){locations=locations.filter(l=>l.id!==editLocId);saveLocs();closeModal('loc-modal');renderLocations();}
+
+/* ── Headspace ── */
+function renderHsNotes() {
+  const list=document.getElementById('headspace-list');
+  if(!hsNotes.length){list.innerHTML=`<div class="entries-empty" style="grid-column:1/-1"><div class="empty-icon">💭</div><div>No headspace notes yet.</div><div style="font-size:12px;margin-top:4px;">Document patterns, triggers, coping strategies…</div></div>`;return;}
+  list.innerHTML='';
+  hsNotes.forEach((n,i)=>{
+    const linked=n.memberIds?.length?`<div class="hs-linked"><span class="hs-linked-label">Linked</span>${n.memberIds.map(mid=>{
+      const m=allMembers.find(x=>x.id===mid);if(!m)return'';
+      const nm=m.display_name||m.name||'?';const bg=m.color?`background:#${m.color}44;`:'';
+      const av=m.avatar_url?`<div class="hs-chip-av"><img src="${m.avatar_url}"></div>`:`<div class="hs-chip-av" style="${bg}">${esc(nm.charAt(0))}</div>`;
+      return`<div class="hs-chip">${av}${esc(nm)}</div>`;}).join('')}</div>`:'';
+    const card=document.createElement('div');card.className='hs-card';card.style.animationDelay=`${i*0.04}s`;
+    card.innerHTML=`<div class="hs-header"><div class="hs-dot" style="background:${n.color||'#80848e'}"></div><div class="hs-title">${esc(n.title)}</div><div class="hs-cat">${esc(n.cat||'general')}</div><button class="hs-edit-btn" onclick="openHsModal('${n.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="hs-body">${esc(n.body)}</div>${linked}`;
+    list.appendChild(card);
+  });
+}
+function openHsModal(noteId){
+  editHsId=noteId||null;const isEdit=!!noteId;const n=isEdit?hsNotes.find(x=>x.id===noteId):null;
+  document.getElementById('hs-modal-title').textContent=isEdit?'Edit Note':'Add Headspace Note';
+  document.getElementById('hs-title').value=isEdit?n.title:'';
+  document.getElementById('hs-body').value=isEdit?n.body:'';
+  document.getElementById('hs-cat').value=isEdit?(n.cat||'general'):'general';
+  document.getElementById('hs-del-btn').style.display=isEdit?'':'none';
+  buildColorRow('hs-color-row',n?.color||PALETTE[0]);
+  buildMemberList('hs-members',n?.memberIds||[]);
+  openModal('hs-modal');
+}
+function saveHs(){
+  const title=document.getElementById('hs-title').value.trim();if(!title){document.getElementById('hs-title').focus();return;}
+  const body=document.getElementById('hs-body').value.trim();
+  const cat=document.getElementById('hs-cat').value;
+  const color=document.querySelector('#hs-color-row .modal-color-swatch.selected')?.dataset.color||PALETTE[0];
+  const memberIds=getChecked('hs-members');
+  if(editHsId){const n=hsNotes.find(x=>x.id===editHsId);if(n)Object.assign(n,{title,body,cat,color,memberIds});}
+  else hsNotes.push({id:'hs_'+Date.now(),title,body,cat,color,memberIds});
+  saveHsData();closeModal('hs-modal');renderHsNotes();
+}
+function deleteHs(){hsNotes=hsNotes.filter(n=>n.id!==editHsId);saveHsData();closeModal('hs-modal');renderHsNotes();}
+
+/* ── Roles ── */
+function renderRoles(){
+  const list=document.getElementById('roles-list');
+  if(!roles.length){list.innerHTML=`<div class="entries-empty" style="grid-column:1/-1"><div class="empty-icon">🏷️</div><div>No roles or info yet.</div><div style="font-size:12px;margin-top:4px;">Document system roles, subsystems, relationships…</div></div>`;return;}
+  list.innerHTML='';
+  roles.forEach((r,i)=>{
+    const linked=r.memberIds?.length?`<div class="hs-linked"><span class="hs-linked-label">Members</span>${r.memberIds.map(mid=>{
+      const m=allMembers.find(x=>x.id===mid);if(!m)return'';
+      const nm=m.display_name||m.name||'?';const bg=m.color?`background:#${m.color}44;`:'';
+      const av=m.avatar_url?`<div class="hs-chip-av"><img src="${m.avatar_url}"></div>`:`<div class="hs-chip-av" style="${bg}">${esc(nm.charAt(0))}</div>`;
+      return`<div class="hs-chip">${av}${esc(nm)}</div>`;}).join('')}</div>`:'';
+    const card=document.createElement('div');card.className='hs-card';card.style.animationDelay=`${i*0.04}s`;
+    card.innerHTML=`<div class="hs-header"><div class="hs-dot" style="background:${r.color||'#80848e'}"></div><div class="hs-title">${esc(r.title)}</div><div class="hs-cat">${esc(r.cat||'role')}</div><button class="hs-edit-btn" onclick="openRoleModal('${r.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="hs-body">${esc(r.body)}</div>${linked}`;
+    list.appendChild(card);
+  });
+}
+function openRoleModal(roleId){
+  editRoleId=roleId||null;const isEdit=!!roleId;const r=isEdit?roles.find(x=>x.id===roleId):null;
+  document.getElementById('role-modal-title').textContent=isEdit?'Edit Role / Info':'Add Role / Info';
+  document.getElementById('role-title').value=isEdit?r.title:'';
+  document.getElementById('role-body').value=isEdit?r.body:'';
+  document.getElementById('role-cat').value=isEdit?(r.cat||'role'):'role';
+  document.getElementById('role-del-btn').style.display=isEdit?'':'none';
+  buildColorRow('role-color-row',r?.color||PALETTE[2]);
+  buildMemberList('role-members',r?.memberIds||[]);
+  openModal('role-modal');
+}
+function saveRole(){
+  const title=document.getElementById('role-title').value.trim();if(!title){document.getElementById('role-title').focus();return;}
+  const body=document.getElementById('role-body').value.trim();
+  const cat=document.getElementById('role-cat').value;
+  const color=document.querySelector('#role-color-row .modal-color-swatch.selected')?.dataset.color||PALETTE[2];
+  const memberIds=getChecked('role-members');
+  if(editRoleId){const r=roles.find(x=>x.id===editRoleId);if(r)Object.assign(r,{title,body,cat,color,memberIds});}
+  else roles.push({id:'r_'+Date.now(),title,body,cat,color,memberIds});
+  saveRolesData();closeModal('role-modal');renderRoles();
+}
+function deleteRole(){roles=roles.filter(r=>r.id!==editRoleId);saveRolesData();closeModal('role-modal');renderRoles();}
+
+/* ── Modal helpers ── */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function bgClose(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')['loc-modal','hs-modal','role-modal'].forEach(closeModal);});
+
+function buildMemberList(listId,selectedIds){
+  const list=document.getElementById(listId);list.innerHTML='';
+  if(!allMembers.length){list.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--text-muted)">Loading members…</div>';return;}
+  allMembers.forEach(m=>{
+    const checked=selectedIds.includes(m.id);
+    const item=document.createElement('div');item.className='modal-member-item'+(checked?' checked':'');item.dataset.id=m.id;
+    const chk=document.createElement('div');chk.className='mmi-check';
+    const av=document.createElement('div');av.className='mmi-av';
+    if(m.avatar_url)av.innerHTML=`<img src="${m.avatar_url}" alt="">`;
+    else{av.textContent=(m.display_name||m.name||'?').charAt(0);if(m.color)av.style.background=`#${m.color}44`;}
+    const nm=document.createElement('div');nm.className='mmi-name';nm.textContent=m.display_name||m.name;
+    item.appendChild(chk);item.appendChild(av);item.appendChild(nm);
+    item.onclick=()=>item.classList.toggle('checked');
+    list.appendChild(item);
+  });
+}
+function getChecked(listId){return[...document.querySelectorAll(`#${listId} .modal-member-item.checked`)].map(el=>el.dataset.id);}
+function buildColorRow(rowId,sel){
+  const row=document.getElementById(rowId);row.innerHTML='';
+  PALETTE.forEach(c=>{
+    const sw=document.createElement('div');sw.className='modal-color-swatch'+(c===sel?' selected':'');
+    sw.style.background=c;sw.dataset.color=c;
+    sw.onclick=()=>{row.querySelectorAll('.modal-color-swatch').forEach(s=>s.classList.remove('selected'));sw.classList.add('selected');};
+    row.appendChild(sw);
+  });
+}
+
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function logout(){sessionStorage.removeItem('pk_token');window.location.href='index.html';}
+
+boot();
+</script>
+</body>
+</html>
