@@ -314,6 +314,7 @@
     <a class="nav-tab" href="switches.html">Switch History</a>
     <a class="nav-tab" href="groups.html">Group List</a>
     <a class="nav-tab active" href="analytics.html">Analytics</a>
+    <a class="nav-tab" href="journal.html">Journal</a>
     <a class="nav-tab" href="settings.html">Settings</a>
   </div>
 
@@ -431,6 +432,9 @@ function makeMiniAvatar(m) {
 // ── Compute stats from all switches ───────────────────────
 function computeStats(switches, memberMap) {
   const now = Date.now();
+
+  const sorted = [...switches].reverse();
+
   const todayStart  = startOfDay(new Date(now)).getTime();
   const weekStart   = startOfWeek(new Date(now)).getTime();
   const monthStart  = startOfMonth(new Date(now)).getTime();
@@ -453,11 +457,11 @@ function computeStats(switches, memberMap) {
   const frontTimeAll  = {};
   const coPairs       = {};  // "id1|id2" → count (by number of switches)
 
-  for (let i = 0; i < switches.length; i++) {
-    const sw = switches[i];
+  for (let i = 0; i < sorted.length; i++) {
+    const sw = sorted[i];
     const start = new Date(sw.timestamp).getTime();
-    const end   = i + 1 < switches.length
-      ? new Date(switches[i + 1].timestamp).getTime()
+    const end   = i + 1 < sorted.length
+      ? new Date(sorted[i + 1].timestamp).getTime()
       : now; // last switch is "still active"
     const duration = Math.max(0, end - start);
 
@@ -626,7 +630,6 @@ function renderAnalytics(stats, memberMap) {
       row.appendChild(avsWrap);
       row.appendChild(info);
       row.appendChild(barWrap);
-      grid.appendChild; // just for reference
       cofronts.appendChild(row);
     });
   }
